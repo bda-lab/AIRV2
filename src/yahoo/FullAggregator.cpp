@@ -258,7 +258,11 @@ void FullAggregator::streamProcess(int channel) {
 			}
 
 			pthread_mutex_unlock(&WIDtoIHM_mutex); //====================================================================
-
+			// simulate unordered events
+			// if (rank == 0)
+			// {
+			// 	sleep(2);
+			// }
 			// Finally send message to a single collector on rank 0
 			int n = 0;
 			for (vector<Vertex*>::iterator v = next.begin(); v != next.end();

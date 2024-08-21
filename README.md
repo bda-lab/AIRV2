@@ -141,3 +141,8 @@ References:
 
 [2] Vinu E. Venugopal and Martin Theobald. 2020. Benchmarking Synchronous and Asynchronous Stream Processing Systems. In CoDS-COMAD 2020: 7th ACM IKDD CoDS and 25th COMAD, Hyderabad India, January 5-7, 2020. ACM, 322–323. https://doi.org/10.1145/3371158.3371206
 
+
+
+Code Walkthrough for Usecases:
+--------------------------------
+https://dapper-gray-a5d.notion.site/4c75265d7581438b9bcf6efc1c17a4b8?v=1b74396e33084cc0b5518ff921c04c82

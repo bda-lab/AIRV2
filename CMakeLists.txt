@@ -86,14 +86,8 @@ add_executable(AIR
         src/relational/SortMergeJoin.hpp
         src/serialization/Serialization.cpp
         src/serialization/Serialization.hpp
-        src/usecases/MapReduce.cpp
-        src/usecases/MapReduce.hpp
         src/usecases/StreamingTest.cpp
         src/usecases/StreamingTest.hpp
-        src/usecases/TPCH.cpp
-        src/usecases/TPCH.hpp
-        src/usecases/WinAgg.cpp
-        src/usecases/WinAgg.hpp
         src/usecases/YSB.cpp
         src/usecases/YSB.hpp
         src/usecases/YSB_m.cpp

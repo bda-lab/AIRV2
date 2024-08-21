@@ -47,13 +47,10 @@
 #include <ctime>
 #include <iostream>
 
-#include "../usecases/MapReduce.hpp"
+
 #include "../usecases/StreamingTest.hpp"
-#include "../usecases/TPCH.hpp"
-#include "../usecases/WinAgg.hpp"
 #include "../usecases/YSB.hpp"
 #include "../usecases/YSB_m.hpp"
-
 using namespace std;
 
 int main(int argc, char* argv[]) {
@@ -70,17 +67,7 @@ int main(int argc, char* argv[]) {
 
 		string s(argv[1]);
 
-		if (s.compare("TPCH") == 0) {
-
-			dataflow = new TPCH_Q5();
-			batchflag = true;
-
-		} else if (s.compare("MR") == 0) {
-
-			dataflow = new MapReduce();
-			batchflag = true;
-
-		} else if (s.compare("YSB") == 0) {
+		if (s.compare("YSB") == 0) {
 
 			dataflow = new YSB(tp);
 
@@ -88,9 +75,6 @@ int main(int argc, char* argv[]) {
 
 			dataflow = new YSB_m(tp);
 
-		} else if (s.compare("WA") == 0) {
-
-			dataflow = new WinAgg(tp);
 		}
 
 	} else {

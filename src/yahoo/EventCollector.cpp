@@ -125,9 +125,9 @@ void EventCollector::streamProcess(int channel) {
 				num_messages++;
 
 				cout << "\n  #" << num_messages << " COUNT: " << count
-						<< "\tAVG_LATENCY: " << (sum_latency / sum_counts)
-						<< "\tN=" << event_count << "\n" << endl;
-
+						<< "\tAVG_LATENCY: " << (sum_latency / sum_counts)<< "\tGlobal Sum Counts: " << sum_counts << 
+						"\tGlobal Sum Latency: " << sum_latency << "\tN=" << event_count << "\n" << endl;
+						
 
 				delete inMessage; // delete message from incoming queue
 				c++;

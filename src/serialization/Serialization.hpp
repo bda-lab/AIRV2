@@ -40,43 +40,56 @@
 
 using namespace std;
 
-typedef struct EventDG {
+typedef struct EventDG
+{
 	long int event_time;
-//	int event_type; // possible values:  { view = 1, click = 2, purchase = 3}
+	//	int event_type; // possible values:  { view = 1, click = 2, purchase = 3}
+	long int window_id;
 	char event_type[9];
 	char ad_id[37];
 	char userid_pageid_ipaddress[82]; // default value: "7ad5154e-b296-4b07-9cb8-15bb6a395b2f, 328df5ff-0e4a-4f8e-b3ea-5c35d6a3fb3b, 1.2.3.4\0"
 } EventDG;
 
-typedef struct EventFT {
+typedef struct EventFT
+{
 	long int event_time;
+	long int window_id;
 	char ad_id[37];
 } EventFT;
 
-typedef struct EventJ {
+typedef struct EventJ
+{
 	long int event_time;
+	long int window_id;
 	char c_id[37];
 } EventJ;
 
-typedef struct EventPA {
+typedef struct EventPA
+{
 	long int max_event_time;
+	long int window_id;
 	long int c_id;
 	int count;
 } EventPA;
 
-typedef struct EventPC {
+typedef struct EventPC
+{
 	long int WID;
+	long int window_id;
 	long int c_id;
 	int count;
 	int latency;
+	int final_latency;
 } EventPC;
 
-typedef struct IdCount {
+typedef struct IdCount
+{
 	long int max_event_time;
 	long int count;
 } idcnt;
 
-typedef struct EventPC_m {
+typedef struct EventPC_m
+{
 	long int WID;
 	long int c_id;
 	int count;
@@ -84,80 +97,80 @@ typedef struct EventPC_m {
 	int type;
 } EventPC_m;
 
-class Serialization {
+class Serialization
+{
 
 public:
+	void deserialize(Window *window, Partition<int> *partition);
 
-	void deserialize(Window* window, Partition<int>* partition);
+	void serialize(Partition<int> *partition, Message *message);
 
-	void serialize(Partition<int>* partition, Message* message);
+	void serialize(Partition<int> *partitions, int numPartitions,
+				   Message **messages, int numMessages);
 
-	void serialize(Partition<int>* partitions, int numPartitions,
-			Message** messages, int numMessages);
+	static int decodeInt(char *chars);
 
-	static int decodeInt(char* chars);
+	static void encodeInt(char *chars, int val);
 
-	static void encodeInt(char* chars, int val);
+	static float decodeFloat(char *chars);
 
-	static float decodeFloat(char* chars);
-
-	static void encodeFloat(char* chars, float val);
+	static void encodeFloat(char *chars, float val);
 
 	//----for FLOW WRAPPING----
 
-	void unwrap(Message* message); //for re-pointing the message variables correctly
+	void unwrap(Message *message); // for re-pointing the message variables correctly
 
-	void unwrapFirstWU(Message* message, WrapperUnit* wu); //de-serializing the first wrapper-unit
+	void unwrapFirstWU(Message *message, WrapperUnit *wu); // de-serializing the first wrapper-unit
 
-	void printWrapper(WrapperUnit* wc);
+	void printWrapper(WrapperUnit *wc);
 
 	//----for YSB----
 
-	void YSBserializeDG(EventDG* event, Message* message);
+	void YSBserializeDG(EventDG *event, Message *message);
 
-	void YSBdeserializeDG(Message* message, EventDG* event, int offset);
+	void YSBdeserializeDG(Message *message, EventDG *event, int offset);
 
-	void YSBprintDG(EventDG* event);
+	void YSBprintDG(EventDG *event);
 
-	void YSBserializeFT(EventFT* event, Message* message);
+	void YSBserializeFT(EventFT *event, Message *message);
 
-	void YSBdeserializeFT(Message* message, EventFT* event, int offset);
+	void YSBdeserializeFT(Message *message, EventFT *event, int offset);
 
-	void YSBprintFT(EventFT* event);
+	void YSBprintFT(EventFT *event);
 
-	void YSBserializeJ(EventJ* event, Message* message);
+	void YSBserializeJ(EventJ *event, Message *message);
 
-	void YSBdeserializeJ(Message* message, EventJ* event, int offset);
+	void YSBdeserializeJ(Message *message, EventJ *event, int offset);
 
-	void YSBprintJ(EventJ* event);
+	void YSBprintJ(EventJ *event);
 
-	void YSBserializePA(EventPA* event, Message* message);
+	void YSBserializePA(EventPA *event, Message *message);
 
-	void YSBdeserializePA(Message* message, EventPA* event, int offset);
+	void YSBdeserializePA(Message *message, EventPA *event, int offset);
 
-	void YSBprintPA(EventPA* event);
+	void YSBprintPA(EventPA *event);
 
-	void YSBserializePC(EventPC* event, Message* message);
+	void YSBserializePC(EventPC *event, Message *message);
 
-	void YSBdeserializePC(Message* message, EventPC* event, int offset);
+	void YSBdeserializePC(Message *message, EventPC *event, int offset);
 
-	void YSBprintPC(EventPC* event);
+	void YSBprintPC(EventPC *event);
 
 	//-----for WIN_AGG use-case------
 
-	void YSBserializeIdCnt(IdCount* event, Message* message);
+	void YSBserializeIdCnt(IdCount *event, Message *message);
 
-	void YSBdeserializeIdCnt(Message* message, IdCount* event, int offset);
+	void YSBdeserializeIdCnt(Message *message, IdCount *event, int offset);
 
-	void YSBprintIdCnt(IdCount* event);
+	void YSBprintIdCnt(IdCount *event);
 
 	//----for YSB* use-case-------
 
-	void YSBserializePC_m(EventPC_m* event, Message* message);
+	void YSBserializePC_m(EventPC_m *event, Message *message);
 
-	void YSBdeserializePC_m(Message* message, EventPC_m* event, int offset);
+	void YSBdeserializePC_m(Message *message, EventPC_m *event, int offset);
 
-	void YSBprintPC_m(EventPC_m* event);
+	void YSBprintPC_m(EventPC_m *event);
 };
 
 #endif /* SERIALIZATION_SERIALIZATION_HPP_ */
