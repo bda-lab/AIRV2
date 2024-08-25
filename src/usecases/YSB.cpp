@@ -39,15 +39,14 @@
 #include "../yahoo/FullAggregator.hpp"
 #include "../yahoo/PartialAggregator.hpp"
 #include "../yahoo/SHJoin.hpp"
-
 using namespace std;
 /**
-    * We calculate the latency as the difference between the result generation timestamp for a given `time_window` and `campaign_id`
-    * pair and the event timestamp of the latest record generated that belongs to that bucket.
+ * We calculate the latency as the difference between the result generation timestamp for a given `time_window` and `campaign_id`
+ * pair and the event timestamp of the latest record generated that belongs to that bucket.
  **/
 
-YSB::YSB(unsigned long throughput) :
-		Dataflow() {
+YSB::YSB(unsigned long throughput) : Dataflow()
+{
 
 	generator = new EventGenerator(1, rank, worldSize, throughput);
 	filter = new EventFilter(2, rank, worldSize);
@@ -60,7 +59,7 @@ YSB::YSB(unsigned long throughput) :
 	addLink(filter, join);
 	addLink(join, par_aggregate);
 	addLink(par_aggregate, full_aggregate);
-	addLink(full_aggregate, collector);
+	addLink(full_aggregate,collector);
 
 	generator->initialize();
 	filter->initialize();
@@ -70,7 +69,8 @@ YSB::YSB(unsigned long throughput) :
 	collector->initialize();
 }
 
-YSB::~YSB() {
+YSB::~YSB()
+{
 
 	delete generator;
 	delete filter;
@@ -79,4 +79,3 @@ YSB::~YSB() {
 	delete full_aggregate;
 	delete collector;
 }
-

@@ -25,47 +25,48 @@
  **/
 
 /*
- * EventCollector.cpp
+ * SerializedCollector.cpp
  *
  *  Created on: Dec 26, 2018
  *      Author: vinu.venugopal
  */
-#include <mpi.h>
-// #include <mpi_time.h>
+
 #include <unistd.h>
-#include <cstring>
-#include <iostream>
 #include "../serialization/Serialization.hpp"
-#include "EventCollector.hpp"
-
+#include "SerializedCollector.hpp"
+#include <bits/stdc++.h>
+#include <mpi.h>
+#include <chrono>
+#include <time.h>
 using namespace std;
+using namespace std::chrono;
 
-EventCollector::EventCollector(int tag, int rank, int worldSize) : Vertex(tag, rank, worldSize)
+SerializedCollector::SerializedCollector(int tag, int rank, int worldSize) : Vertex(tag, rank, worldSize)
 {
 
 	// Global stats
 	sum_latency = 0;
 	sum_counts = 0;
 	num_messages = 0;
-
+	min_window_id = 0;
 	S_CHECK(if (rank == 0) {
 		datafile.open("Data/results" + to_string(rank) + ".tsv");
 	})
 
-	D(cout << "EVENTCOLLECTOR [" << tag << "] CREATED @ " << rank << endl;)
+	D(cout << "SerializedCollector [" << tag << "] CREATED @ " << rank << endl;)
 }
 
-EventCollector::~EventCollector()
+SerializedCollector::~SerializedCollector()
 {
-	D(cout << "EVENTCOLLECTOR [" << tag << "] DELETED @ " << rank << endl;)
+	D(cout << "SerializedCollector [" << tag << "] DELETED @ " << rank << endl;)
 }
 
-void EventCollector::batchProcess()
+void SerializedCollector::batchProcess()
 {
-	D(cout << "EVENTCOLLECTOR->BATCHPROCESS [" << tag << "] @ " << rank << endl;)
+	D(cout << "SerializedCollector->BATCHPROCESS [" << tag << "] @ " << rank << endl;)
 }
 
-void EventCollector::streamProcess(int channel)
+void SerializedCollector::streamProcess(int channel)
 {
 
 	D(cout << "EVENTCOLLECTOR->STREAMPROCESS [" << tag << "] @ " << rank
@@ -79,7 +80,9 @@ void EventCollector::streamProcess(int channel)
 		Serialization sede;
 
 		EventPC eventPC;
-
+		unordered_map<string, EventPC> widCidToEventPC;
+		unordered_map<long int, vector<long int>> widToCids;
+		unordered_map<long int, long int> widToSumCount;
 		int c = 0;
 		while (ALIVE)
 		{
@@ -105,49 +108,50 @@ void EventCollector::streamProcess(int channel)
 				inMessage = tmpMessages->front();
 				tmpMessages->pop_front();
 
-				D(cout << "EVENTCOLLECTOR->POP MESSAGE: TAG [" << tag << "] @ "
-					   << rank << " CHANNEL " << channel << " BUFFER "
-					   << inMessage->size << endl;)
-
 				int event_count = inMessage->size / sizeof(EventPC);
-				// cout << "EVENT_COUNT: " << event_count << endl;
 
-				int i = 0, count = 0;
+				int i = 0;
 				while (i < event_count)
 				{
 					sede.YSBdeserializePC(inMessage, &eventPC,
 										  i * sizeof(EventPC));
-					long int time_now = (long int)(MPI_Wtime() * 1000.0);
 
-					sum_latency += (time_now - eventPC.latency);
-					count += eventPC.count;
-					//					sede.YSBprintPC(&eventPC);
-					S_CHECK(
-						datafile
-							<< eventPC.WID << "\t"
-							<< eventPC.c_id << "\t"
-							<< eventPC.count
-							<< endl;
-
-					)
-					cout << "WID: " << eventPC.WID << "\tc_id: " << eventPC.c_id << "\tcount: " << eventPC.count << "\tmax_event_time: " << eventPC.latency << endl;
-
+					string key = to_string(eventPC.WID) + "_" + to_string(eventPC.c_id);
+					widCidToEventPC[key] = eventPC;
+					widToCids[eventPC.WID].push_back(eventPC.c_id);
 					i++;
 				}
 				sum_counts += event_count; // count of distinct c_id's processed
 				num_messages++;
-
-				cout << "\n  #" << num_messages << " COUNT: " << count
-					 << "\tAVG_LATENCY: " << ((double)sum_latency / sum_counts)/1000.0 << "\tGlobal Sum Counts: " << sum_counts << "\tGlobal Sum Latency: " << sum_latency << "\tN=" << event_count << "\n"
-					 << endl;
+				widToSumCount[eventPC.WID] = event_count;
 
 				delete inMessage; // delete message from incoming queue
 				c++;
 			}
-
+			int iter = 0, total_count = 0;
+			// Process events for min_window_id
+			if (widToCids.count(min_window_id) > 0)
+			{
+				long int time_now = (long int)(MPI_Wtime() * 1000.0);
+				while (widToCids.count(min_window_id) > 0)
+				{
+					for (long int cid : widToCids[min_window_id])
+					{
+						string key = to_string(min_window_id) + "_" + to_string(cid);
+						EventPC eventPC = widCidToEventPC[key];
+						sum_latency += (time_now - eventPC.latency);
+						total_count += eventPC.count;
+						cout << "WID: " << eventPC.WID << "\tc_id: " << eventPC.c_id << "\tcount: " << eventPC.count << "\tmax_event_time: " << eventPC.latency << endl;
+						widCidToEventPC.erase(key);
+					}
+					cout << "\n  #" << num_messages << " COUNT: " << total_count
+						 << "\tAVG_LATENCY: " << ((double)sum_latency / sum_counts) / 1000.0 << "\tGlobal Sum Counts: " << sum_counts << "\tGlobal Sum Latency: " << sum_latency << "\tN=" << widToSumCount[eventPC.WID] << "\n";
+					widToCids.erase(min_window_id);
+					min_window_id++;
+				}
+			}
 			tmpMessages->clear();
 		}
-
 		delete tmpMessages;
 	}
 }

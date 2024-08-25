@@ -92,6 +92,8 @@ add_executable(AIR
         src/usecases/YSB.hpp
         src/usecases/YSB_m.cpp
         src/usecases/YSB_m.hpp
+        src/usecases/YSB_Serialized.cpp
+        src/usecases/YSB_Serialized.hpp
         src/winagg/EventSharder.cpp
         src/winagg/EventSharder.hpp
         src/winagg/WindowedCounter.cpp
@@ -108,6 +110,8 @@ add_executable(AIR
         src/yahoo/PartialAggregator.hpp
         src/yahoo/SHJoin.cpp
         src/yahoo/SHJoin.hpp
+        src/yahoo_serialized/SerializedCollector.cpp
+        src/yahoo_serialized/SerializedCollector.hpp
         src/yahoo_m/EventFilter_m.cpp
         src/yahoo_m/EventFilter_m.hpp
         src/yahoo_m/FullAggregator_m.cpp

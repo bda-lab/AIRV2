@@ -41,10 +41,10 @@
 using namespace std;
 #include <fstream>
 
-class EventGenerator: public Vertex {
+class EventGenerator : public Vertex
+{
 
 public:
-
 	EventGenerator(int tag, int rank, int worldSize, unsigned long tp);
 
 	~EventGenerator();
@@ -54,20 +54,18 @@ public:
 	void streamProcess(int channel);
 
 private:
-
 	unsigned long throughput;
-
+	// long int gen_window_id;
 	std::ofstream datafile;
 
 	vector<string> ad_ids;
 
-	void getNextMessage(EventDG* event, WrapperUnit* wrapper_unit,
-			Message* message, int events_per_msg, long int time_now);
+	void getNextMessage(EventDG *event, WrapperUnit *wrapper_unit,
+						Message *message, int events_per_msg, long int time_now);
 
 	int myrandom(int min, int max);
 
 	string eventtypes[3] = {"click", "view", "purchase"};
-
 };
 
 #endif /* CONNECTOR_EVENTGENERATOR_HPP_ */

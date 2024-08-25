@@ -25,29 +25,41 @@
  **/
 
 /*
- * YSB.hpp
+ * SerializedCollector.hpp
  *
- *  Created on: Jun 18, 2018
+ *  Created on: Dec 26, 2018
  *      Author: vinu.venugopal
  */
 
-#ifndef USECASES_YSB_HPP_
-#define USECASES_YSB_HPP_
+#ifndef COLLECTOR_SerializedCollector_HPP_
+#define COLLECTOR_SerializedCollector_HPP_
 
-#include "../dataflow/Dataflow.hpp"
+#include "../dataflow/Vertex.hpp"
+#include <fstream>
+#include <string>
 
 using namespace std;
 
-class YSB : public Dataflow
+class SerializedCollector : public Vertex
 {
 
 public:
-	Vertex *generator, *filter, *join, *par_aggregate, *full_aggregate,
-		*buffer, *collector;
+	// Global stats
+	long int sum_latency;
+	long int sum_counts;
+	int num_messages;
+	long int min_window_id;
 
-	YSB(unsigned long tp);
+	SerializedCollector(int tag, int rank, int worldSize);
 
-	~YSB();
+	~SerializedCollector();
+
+	void batchProcess();
+
+	void streamProcess(int channel);
+
+private:
+	std::ofstream datafile;
 };
 
-#endif /* USECASES_YSB_HPP_ */
+#endif /* COLLECTOR_SerializedCollector_HPP_ */

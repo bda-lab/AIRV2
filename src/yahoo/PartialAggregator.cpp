@@ -48,52 +48,56 @@
 
 using namespace std;
 
-PartialAggregator::PartialAggregator(int tag, int rank, int worldSize) :
-		Vertex(tag, rank, worldSize) {
+PartialAggregator::PartialAggregator(int tag, int rank, int worldSize) : Vertex(tag, rank, worldSize)
+{
 	D(cout << "PARTIALAGGREGATOR [" << tag << "] CREATED @ " << rank << endl;);
 }
 
-PartialAggregator::~PartialAggregator() {
+PartialAggregator::~PartialAggregator()
+{
 	D(cout << "PARTIALAGGREGATOR [" << tag << "] DELETED @ " << rank << endl;);
 }
 
-void PartialAggregator::batchProcess() {
+void PartialAggregator::batchProcess()
+{
 	D(cout << "PARTIALAGGREGATOR->BATCHPROCESS [" << tag << "] @ " << rank
-			<< endl;);
+		   << endl;);
 }
 
-void PartialAggregator::streamProcess(int channel) {
+void PartialAggregator::streamProcess(int channel)
+{
 
 	D(cout << "PARTIALAGGREGATOR->STREAMPROCESS [" << tag << "] @ " << rank
-			<< " IN-CHANNEL " << channel << endl;);
+		   << " IN-CHANNEL " << channel << endl;);
 
-	Message* inMessage;
-	Message** outMessagesToWindowIDs = new Message*[worldSize];
-	list<Message*>* tmpMessages = new list<Message*>();
+	Message *inMessage;
+	Message **outMessagesToWindowIDs = new Message *[worldSize];
+	list<Message *> *tmpMessages = new list<Message *>();
 	Serialization sede;
 
-	OuterHMap WIDtoIHM(10); //Window_ID to Inner-HashMap (IHM) mapping
+	OuterHMap WIDtoIHM(10); // Window_ID to Inner-HashMap (IHM) mapping
 	OuterHMap::iterator WIDtoIHM_it;
-	InnerHMap::iterator CIDtoCountAndMaxEventTime_it; //IHM: Campaign_ID to Max-Event-time mapping
+	InnerHMap::iterator CIDtoCountAndMaxEventTime_it; // IHM: Campaign_ID to Max-Event-time mapping
 
-	//WrapperUnit wrapper_unit;
+	// WrapperUnit wrapper_unit;
 	EventJ eventJ;
 	EventPA eventPA;
 
 	int c = 0;
-	while (ALIVE) {
+	while (ALIVE)
+	{
 
 		pthread_mutex_lock(&listenerMutexes[channel]);
 
 		while (inMessages[channel].empty())
 			pthread_cond_wait(&listenerCondVars[channel],
-					&listenerMutexes[channel]);
+							  &listenerMutexes[channel]);
 
-//		if(inMessages[channel].size()>1)
-//				  cout<<tag<<" CHANNEL-"<<channel<<" BUFFER SIZE:"<<inMessages[channel].size()<<endl;
+		//		if(inMessages[channel].size()>1)
+		//				  cout<<tag<<" CHANNEL-"<<channel<<" BUFFER SIZE:"<<inMessages[channel].size()<<endl;
 
-
-		while (!inMessages[channel].empty()) {
+		while (!inMessages[channel].empty())
+		{
 			inMessage = inMessages[channel].front();
 			inMessages[channel].pop_front();
 			tmpMessages->push_back(inMessage);
@@ -101,76 +105,78 @@ void PartialAggregator::streamProcess(int channel) {
 
 		pthread_mutex_unlock(&listenerMutexes[channel]);
 
-		while (!tmpMessages->empty()) {
+		while (!tmpMessages->empty())
+		{
 
 			inMessage = tmpMessages->front();
 			tmpMessages->pop_front();
 
 			D(cout << "PARTIALAGGREGATOR->POP MESSAGE: TAG [" << tag << "] @ "
-					<< rank << " CHANNEL " << channel << " BUFFER "
-					<< inMessage->size << endl;);
+				   << rank << " CHANNEL " << channel << " BUFFER "
+				   << inMessage->size << endl;);
 
 			long int WID, c_id;
 
 			sede.unwrap(inMessage);
-			//if (inMessage->wrapper_length > 0) {
+			// if (inMessage->wrapper_length > 0) {
 			//	sede.unwrapFirstWU(inMessage, &wrapper_unit);
 			//	sede.printWrapper(&wrapper_unit);
-			//}
+			// }
 
-			int offset = sizeof(int)
-					+ (inMessage->wrapper_length * sizeof(WrapperUnit));
+			int offset = sizeof(int) + (inMessage->wrapper_length * sizeof(WrapperUnit));
 
 			// Caution: copying the header from the inMessage only works if there is only one wrapper and one window per message!
-			for (int w = 0; w < worldSize; w++) {
+			for (int w = 0; w < worldSize; w++)
+			{
 				outMessagesToWindowIDs[w] = new Message(
-						inMessage->size - offset, inMessage->wrapper_length); // create new message with max. required capacity
+					inMessage->size - offset, inMessage->wrapper_length); // create new message with max. required capacity
 				memcpy(outMessagesToWindowIDs[w]->buffer, inMessage->buffer,
-						offset); // simply copy header from old message for now!
+					   offset); // simply copy header from old message for now!
 				outMessagesToWindowIDs[w]->size += offset;
 			}
 
 			int event_count = (inMessage->size - offset) / sizeof(EventFT);
-			D(cout << "\n#EVENT_COUNT: " << event_count <<" TAG: "<<tag<<" RANK: "<<rank<< endl);
+			D(cout << "\n#EVENT_COUNT: " << event_count << " TAG: " << tag << " RANK: " << rank << endl);
 
 			int i = 0, j = 0, k = 0;
 
-			while (i < event_count) {
+			while (i < event_count)
+			{
 
 				sede.YSBdeserializeJ(inMessage, &eventJ,
-						offset + (i * sizeof(EventJ)));
-
-				//cout << "  " << i << "\tevent_time: " << eventJ.event_time
-				//		<< "\tc_id: " << eventJ.c_id << endl;
+									 offset + (i * sizeof(EventJ)));
 
 				c_id = std::stol(eventJ.c_id, nullptr, 16);
 				WID = (eventJ.event_time / AGG_WIND_SPAN);
 
-				if ((WIDtoIHM_it = WIDtoIHM.find(WID)) != WIDtoIHM.end()) {
+				if ((WIDtoIHM_it = WIDtoIHM.find(WID)) != WIDtoIHM.end())
+				{
 
 					if ((CIDtoCountAndMaxEventTime_it =
-							WIDtoIHM_it->second.find(c_id))
-							!= (WIDtoIHM_it->second).end()) {
+							 WIDtoIHM_it->second.find(c_id)) != (WIDtoIHM_it->second).end())
+					{
 
 						CIDtoCountAndMaxEventTime_it->second.first =
-								CIDtoCountAndMaxEventTime_it->second.first + 1;
+							CIDtoCountAndMaxEventTime_it->second.first + 1;
 
-						if (CIDtoCountAndMaxEventTime_it->second.second
-								< eventJ.event_time) { // new max. event time!
+						if (CIDtoCountAndMaxEventTime_it->second.second < eventJ.event_time)
+						{ // new max. event time!
 							CIDtoCountAndMaxEventTime_it->second.second =
-									eventJ.event_time;
+								eventJ.event_time;
 						}
-
-					} else { // new entry in inner hashmap!
+					}
+					else
+					{ // new entry in inner hashmap!
 						WIDtoIHM_it->second.emplace(c_id,
-								std::make_pair(1, eventJ.event_time));
+													std::make_pair(1, eventJ.event_time));
 						k++;
 					}
-
-				} else { // new entry in the outer hashmap!
+				}
+				else
+				{ // new entry in the outer hashmap!
 					InnerHMap new_CIDtoCountAndMaxEventTime(100);
 					new_CIDtoCountAndMaxEventTime.emplace(c_id,
-							std::make_pair(1, eventJ.event_time));
+														  std::make_pair(1, eventJ.event_time));
 					WIDtoIHM.emplace(WID, new_CIDtoCountAndMaxEventTime);
 
 					j++;
@@ -179,68 +185,68 @@ void PartialAggregator::streamProcess(int channel) {
 				i++;
 			}
 
-			//cout << "EVENTS: " << i << ", OUTER MAP ENTRIES: " << j
-			//		<< ", INNER MAP ENTRIES: " << k << endl;
-
 			for (WIDtoIHM_it = WIDtoIHM.begin(); WIDtoIHM_it != WIDtoIHM.end();
-					WIDtoIHM_it++) {
+				 WIDtoIHM_it++)
+			{
 				int counter = 0, map_size_cal = 0; // for debugging!
 
 				WID = WIDtoIHM_it->first;
 
 				for (CIDtoCountAndMaxEventTime_it =
-						(WIDtoIHM_it->second).begin();
-						CIDtoCountAndMaxEventTime_it
-								!= (WIDtoIHM_it->second).end();
-						CIDtoCountAndMaxEventTime_it++) {
+						 (WIDtoIHM_it->second).begin();
+					 CIDtoCountAndMaxEventTime_it != (WIDtoIHM_it->second).end();
+					 CIDtoCountAndMaxEventTime_it++)
+				{
 					map_size_cal++;
 					eventPA.max_event_time =
-							CIDtoCountAndMaxEventTime_it->second.second;
+						CIDtoCountAndMaxEventTime_it->second.second;
 					eventPA.count = CIDtoCountAndMaxEventTime_it->second.first;
 					eventPA.c_id = CIDtoCountAndMaxEventTime_it->first;
 
 					counter = counter + eventPA.count;
 
 					sede.YSBserializePA(&eventPA,
-							outMessagesToWindowIDs[WID % worldSize]);
-
+										outMessagesToWindowIDs[WID % worldSize]);
 				}
 
-				D(cout << " #W_ID: " << eventPA.max_event_time/AGG_WIND_SPAN
-						<< " #Event_time: " << eventPA.max_event_time
-						<<"\t map size: " << WIDtoIHM_it->second.size()
-						<<"\t map_size_cal: "<<map_size_cal
-						<< endl;);
+				D(cout << " #W_ID: " << eventPA.max_event_time / AGG_WIND_SPAN
+					   << " #Event_time: " << eventPA.max_event_time
+					   << "\t map size: " << WIDtoIHM_it->second.size()
+					   << "\t map_size_cal: " << map_size_cal
+					   << endl;);
 
 				WIDtoIHM_it->second.clear();
-
 			}
 			WIDtoIHM.clear();
 
 			int n = 0;
-			for (vector<Vertex*>::iterator v = next.begin(); v != next.end();
-					++v) {
+			for (vector<Vertex *>::iterator v = next.begin(); v != next.end();
+				 ++v)
+			{
 
-				for (int w = 0; w < worldSize; w++) {
+				for (int w = 0; w < worldSize; w++)
+				{
 
 					int idx = n * worldSize + w; // iterate over all ranks
 
-					if (outMessagesToWindowIDs[w]->size > 20) { // quick fix for now
+					if (outMessagesToWindowIDs[w]->size > 20)
+					{ // quick fix for now
 
 						// Normal mode: synchronize on outgoing message channel & send message
 						pthread_mutex_lock(&senderMutexes[idx]);
 						outMessages[idx].push_back(outMessagesToWindowIDs[w]);
 
 						D(cout << "PARTIALAGGREGATOR->PUSHBACK MESSAGE [" << tag
-								<< "] #" << c << " @ " << rank << " IN-CHANNEL "
-								<< channel << " OUT-CHANNEL " << idx << " SIZE "
-								<< outMessagesToWindowIDs[w]->size << " CAP "
-								<< outMessagesToWindowIDs[w]->capacity << endl);
+							   << "] #" << c << " @ " << rank << " IN-CHANNEL "
+							   << channel << " OUT-CHANNEL " << idx << " SIZE "
+							   << outMessagesToWindowIDs[w]->size << " CAP "
+							   << outMessagesToWindowIDs[w]->capacity << endl);
 
 						pthread_cond_signal(&senderCondVars[idx]);
 						pthread_mutex_unlock(&senderMutexes[idx]);
-
-					} else {
+					}
+					else
+					{
 
 						delete outMessagesToWindowIDs[w];
 					}

@@ -25,29 +25,57 @@
  **/
 
 /*
- * YSB.hpp
+ * YSB_Serialized.cpp
  *
- *  Created on: Jun 18, 2018
- *      Author: vinu.venugopal
+ *  Created on: July 23, 2018
+ *      Author: martin.theobald, vinu.venugopal
  */
 
-#ifndef USECASES_YSB_HPP_
-#define USECASES_YSB_HPP_
+#include "YSB_Serialized.hpp"
 
-#include "../dataflow/Dataflow.hpp"
-
+#include "../yahoo/EventFilter.hpp"
+#include "../yahoo/EventGenerator.hpp"
+#include "../yahoo/FullAggregator.hpp"
+#include "../yahoo/PartialAggregator.hpp"
+#include "../yahoo/SHJoin.hpp"
+#include "../yahoo_serialized/SerializedCollector.hpp"
 using namespace std;
+/**
+ * We calculate the latency as the difference between the result generation timestamp for a given `time_window` and `campaign_id`
+ * pair and the event timestamp of the latest record generated that belongs to that bucket.
+ **/
 
-class YSB : public Dataflow
+YSB_Serialized::YSB_Serialized(unsigned long throughput) : Dataflow()
 {
 
-public:
-	Vertex *generator, *filter, *join, *par_aggregate, *full_aggregate,
-		*buffer, *collector;
+    generator = new EventGenerator(1, rank, worldSize, throughput);
+    filter = new EventFilter(2, rank, worldSize);
+    join = new SHJoin(3, rank, worldSize);
+    par_aggregate = new PartialAggregator(4, rank, worldSize);
+    full_aggregate = new FullAggregator(5, rank, worldSize);
+    collector = new SerializedCollector(6, rank, worldSize);
 
-	YSB(unsigned long tp);
+    addLink(generator, filter);
+    addLink(filter, join);
+    addLink(join, par_aggregate);
+    addLink(par_aggregate, full_aggregate);
+    addLink(full_aggregate,collector);
 
-	~YSB();
-};
+    generator->initialize();
+    filter->initialize();
+    join->initialize();
+    par_aggregate->initialize();
+    full_aggregate->initialize();
+    collector->initialize();
+}
 
-#endif /* USECASES_YSB_HPP_ */
+YSB_Serialized::~YSB_Serialized()
+{
+
+    delete generator;
+    delete filter;
+    delete join;
+    delete par_aggregate;
+    delete full_aggregate;
+    delete collector;
+}

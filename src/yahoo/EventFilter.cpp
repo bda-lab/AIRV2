@@ -34,7 +34,7 @@
 #include "EventFilter.hpp"
 
 #include <mpi.h>
-//#include <__threading_support>
+// #include <__threading_support>
 #include <cstring>
 #include <iostream>
 #include <iterator>
@@ -47,50 +47,54 @@
 
 using namespace std;
 
-EventFilter::EventFilter(int tag, int rank, int worldSize) :
-		Vertex(tag, rank, worldSize) {
+EventFilter::EventFilter(int tag, int rank, int worldSize) : Vertex(tag, rank, worldSize)
+{
 	D(cout << "EVENTFILTER [" << tag << "] CREATED @ " << rank << endl;)
 	THROUGHPUT_LOG(
-			datafile.open("Data/tp_log"+ to_string(rank) + ".tsv");
-	)
+		datafile.open("Data/tp_log" + to_string(rank) + ".tsv");)
 }
 
-EventFilter::~EventFilter() {
+EventFilter::~EventFilter()
+{
 	D(cout << "EVENTFILTER [" << tag << "] DELETED @ " << rank << endl;)
 }
 
-void EventFilter::batchProcess() {
+void EventFilter::batchProcess()
+{
 	cout << "EVENTFILTER->BATCHPROCESS [" << tag << "] @ " << rank << endl;
 }
 
-void EventFilter::streamProcess(int channel) {
+void EventFilter::streamProcess(int channel)
+{
 
 	D(cout << "EVENTFILTER->STREAMPROCESS [" << tag << "] @ " << rank
-			<< " IN-CHANNEL " << channel << endl;)
+		   << " IN-CHANNEL " << channel << endl;)
 
-	Message* inMessage, *outMessage;
-	list<Message*>* tmpMessages = new list<Message*>();
+	Message *inMessage, *outMessage;
+	list<Message *> *tmpMessages = new list<Message *>();
 	Serialization sede;
 
-	//WrapperUnit wrapper_unit;
+	// WrapperUnit wrapper_unit;
 	EventDG eventDG;
 	EventFT eventFT;
 
 	int c = 0;
 
-	while (ALIVE) {
+	while (ALIVE)
+	{
 
 		pthread_mutex_lock(&listenerMutexes[channel]);
 
 		while (inMessages[channel].empty())
 			pthread_cond_wait(&listenerCondVars[channel],
-					&listenerMutexes[channel]);
+							  &listenerMutexes[channel]);
 
-//		if(inMessages[channel].size()>1)
-//				  cout<<tag<<" CHANNEL-"<<channel<<" BUFFER SIZE:"<<inMessages[channel].size()<<endl;
-//
+		//		if(inMessages[channel].size()>1)
+		//				  cout<<tag<<" CHANNEL-"<<channel<<" BUFFER SIZE:"<<inMessages[channel].size()<<endl;
+		//
 
-		while (!inMessages[channel].empty()) {
+		while (!inMessages[channel].empty())
+		{
 			inMessage = inMessages[channel].front();
 			inMessages[channel].pop_front();
 			tmpMessages->push_back(inMessage);
@@ -98,99 +102,101 @@ void EventFilter::streamProcess(int channel) {
 
 		pthread_mutex_unlock(&listenerMutexes[channel]);
 
-		while (!tmpMessages->empty()) {
+		while (!tmpMessages->empty())
+		{
 
 			inMessage = tmpMessages->front();
 			tmpMessages->pop_front();
 
 			D(cout << "EVENTFILTER->POP MESSAGE: TAG [" << tag << "] @ " << rank
-					<< " CHANNEL " << channel << " BUFFER " << inMessage->size
-					<< endl;)
+				   << " CHANNEL " << channel << " BUFFER " << inMessage->size
+				   << endl;)
 
 			sede.unwrap(inMessage);
-			//if (inMessage->wrapper_length > 0) {
+			// if (inMessage->wrapper_length > 0) {
 			//	sede.unwrapFirstWU(inMessage, &wrapper_unit);
 			//	sede.printWrapper(&wrapper_unit);
-			//}
+			// }
 
-			int offset = sizeof(int)
-					+ (inMessage->wrapper_length * sizeof(WrapperUnit));
+			int offset = sizeof(int) + (inMessage->wrapper_length * sizeof(WrapperUnit));
 
 			outMessage = new Message(inMessage->size - offset,
-					inMessage->wrapper_length); // create new message with max. required capacity
+									 inMessage->wrapper_length); // create new message with max. required capacity
 
 			memcpy(outMessage->buffer, inMessage->buffer, offset); // simply copy header from old message for now!
 			outMessage->size += offset;
 
 			int event_count = (inMessage->size - offset) / sizeof(EventDG);
 
-			D(cout << "THROUGHPUT: " << event_count <<" @RANK-"<<rank<<" TIME: "<<(long int)MPI_Wtime()<< endl;)
+			D(cout << "THROUGHPUT: " << event_count << " @RANK-" << rank << " TIME: " << (long int)MPI_Wtime() << endl;)
 
 			THROUGHPUT_LOG(
-					datafile <<event_count<< "\t"
-					<<rank<< "\t"
-					<<(long int)MPI_Wtime()
-					<< endl;
-					)
-
+				datafile << event_count << "\t"
+						 << rank << "\t"
+						 << (long int)MPI_Wtime()
+						 << endl;)
 
 			int i = 0, j = 0;
-			while (i < event_count) {
+			while (i < event_count)
+			{
 
 				sede.YSBdeserializeDG(inMessage, &eventDG,
-						offset + (i * sizeof(EventDG)));
+									  offset + (i * sizeof(EventDG)));
 
 				D(cout << "  " << i << "\tevent_time: " << eventDG.event_time
-						<< "\tevent_type: " << eventDG.event_type << "\t"
-						<< "ad_id: " << eventDG.ad_id << endl;)
+					   << "\tevent_type: " << eventDG.event_type << "\t"
+					   << "ad_id: " << eventDG.ad_id << endl;)
 
-				if (strcmp(eventDG.event_type, "click")==0) { //FILTERING BASED ON EVENT_TYPE
+				if (strcmp(eventDG.event_type, "click") == 0)
+				{ // FILTERING BASED ON EVENT_TYPE
 					eventFT.event_time = eventDG.event_time;
 					memcpy(eventFT.ad_id, eventDG.ad_id, 37);
 					sede.YSBserializeFT(&eventFT, outMessage); // store filtered events directly in outgoing message!
-//					sede.YSBdeserializeFT(outMessage, &eventFT,
-//							outMessage->size - sizeof(EventFT));
-//					sede.YSBprintFT(&eventFT);
+															   //					sede.YSBdeserializeFT(outMessage, &eventFT,
+															   //							outMessage->size - sizeof(EventFT));
+															   //					sede.YSBprintFT(&eventFT);
 					j++;
 				}
 
 				i++;
 			}
-			//cout << "FILTERED_EVENT_COUNT: " << j << endl;
 
 			// Replicate data to all subsequent vertices, do not actually reshard the data here
 			int n = 0;
-			for (vector<Vertex*>::iterator v = next.begin(); v != next.end();
-					++v) {
+			for (vector<Vertex *>::iterator v = next.begin(); v != next.end();
+				 ++v)
+			{
 
 				int idx = n * worldSize + rank; // always keep workload on same rank
 
-				if (PIPELINE) {
+				if (PIPELINE)
+				{
 
 					// Pipeline mode: immediately copy message into next operator's queue
 					pthread_mutex_lock(&(*v)->listenerMutexes[idx]);
 					(*v)->inMessages[idx].push_back(outMessage);
 
 					D(cout << "EVENTFILTER->PIPELINE MESSAGE [" << tag << "] #"
-							<< c << " @ " << rank << " IN-CHANNEL " << channel
-							<< " OUT-CHANNEL " << idx << " SIZE "
-							<< outMessage->size << " CAP "
-							<< outMessage->capacity << endl;)
+						   << c << " @ " << rank << " IN-CHANNEL " << channel
+						   << " OUT-CHANNEL " << idx << " SIZE "
+						   << outMessage->size << " CAP "
+						   << outMessage->capacity << endl;)
 
 					pthread_cond_signal(&(*v)->listenerCondVars[idx]);
 					pthread_mutex_unlock(&(*v)->listenerMutexes[idx]);
-
-				} else {
+				}
+				else
+				{
 
 					// Normal mode: synchronize on outgoing message channel & send message
 					pthread_mutex_lock(&senderMutexes[idx]);
 					outMessages[idx].push_back(outMessage);
 
 					D(cout << "EVENTFILTER->PUSHBACK MESSAGE [" << tag << "] #"
-							<< c << " @ " << rank << " IN-CHANNEL " << channel
-							<< " OUT-CHANNEL " << idx << " SIZE "
-							<< outMessage->size << " CAP "
-							<< outMessage->capacity << endl;)
+						   << c << " @ " << rank << " IN-CHANNEL " << channel
+						   << " OUT-CHANNEL " << idx << " SIZE "
+						   << outMessage->size << " CAP "
+						   << outMessage->capacity << endl;)
 
 					pthread_cond_signal(&senderCondVars[idx]);
 					pthread_mutex_unlock(&senderMutexes[idx]);

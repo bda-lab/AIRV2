@@ -44,7 +44,6 @@ typedef struct EventDG
 {
 	long int event_time;
 	//	int event_type; // possible values:  { view = 1, click = 2, purchase = 3}
-	long int window_id;
 	char event_type[9];
 	char ad_id[37];
 	char userid_pageid_ipaddress[82]; // default value: "7ad5154e-b296-4b07-9cb8-15bb6a395b2f, 328df5ff-0e4a-4f8e-b3ea-5c35d6a3fb3b, 1.2.3.4\0"
@@ -53,21 +52,18 @@ typedef struct EventDG
 typedef struct EventFT
 {
 	long int event_time;
-	long int window_id;
 	char ad_id[37];
 } EventFT;
 
 typedef struct EventJ
 {
 	long int event_time;
-	long int window_id;
 	char c_id[37];
 } EventJ;
 
 typedef struct EventPA
 {
 	long int max_event_time;
-	long int window_id;
 	long int c_id;
 	int count;
 } EventPA;
@@ -75,11 +71,9 @@ typedef struct EventPA
 typedef struct EventPC
 {
 	long int WID;
-	long int window_id;
 	long int c_id;
 	int count;
-	int latency;
-	int final_latency;
+	long int latency;
 } EventPC;
 
 typedef struct IdCount

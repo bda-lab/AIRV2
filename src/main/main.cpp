@@ -47,37 +47,46 @@
 #include <ctime>
 #include <iostream>
 
-
 #include "../usecases/StreamingTest.hpp"
 #include "../usecases/YSB.hpp"
 #include "../usecases/YSB_m.hpp"
+#include "../usecases/YSB_Serialized.hpp"
 using namespace std;
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[])
+{
 
-	Dataflow* dataflow = nullptr;
+	Dataflow *dataflow = nullptr;
 	bool batchflag = false;
 	unsigned long tp = 10000;
 
-	if (argc > 1) {
+	if (argc > 1)
+	{
 
-		if (argc > 2) {
+		if (argc > 2)
+		{
 			tp = atol(argv[2]);
 		}
 
 		string s(argv[1]);
 
-		if (s.compare("YSB") == 0) {
+		if (s.compare("YSB") == 0)
+		{
 
 			dataflow = new YSB(tp);
-
-		} else if (s.compare("YSBM") == 0) {
+		}
+		else if (s.compare("YSBM") == 0)
+		{
 
 			dataflow = new YSB_m(tp);
-
 		}
-
-	} else {
+		else if (s.compare("YSBS") == 0)
+		{
+			dataflow = new YSB_Serialized(tp);
+		}
+	}
+	else
+	{
 
 		dataflow = new StreamingTest();
 	}
@@ -87,30 +96,31 @@ int main(int argc, char* argv[]) {
 
 	// Iterative batch processing (completely synchronized between input windows)
 	int i = 0;
-	if (batchflag) {
+	if (batchflag)
+	{
 
-		for (i = 0; i < 30; i++) { //repeat 30x
+		for (i = 0; i < 30; i++)
+		{ // repeat 30x
 			startbatch = clock();
 
-			double batchlatency = (clock() - startbatch)
-					/ (double) CLOCKS_PER_SEC * 1000; //batch latency calculation
+			double batchlatency = (clock() - startbatch) / (double)CLOCKS_PER_SEC * 1000; // batch latency calculation
 
 			cout << "BATCH-" << i + 1 << " COMPLETED IN " << batchlatency
-					<< " MSEC (" << batchlatency / 60000 << " MIN) @ "
-					<< dataflow->rank << endl;
+				 << " MSEC (" << batchlatency / 60000 << " MIN) @ "
+				 << dataflow->rank << endl;
 		}
-
-	} else {
+	}
+	else
+	{
 
 		// Stream processing (asynchronous across input windows)
 		dataflow->streamProcess();
-
 	}
 
 	cout << "DATAFLOW COMPLETED IN "
-			<< ((clock() - start) / (double) CLOCKS_PER_SEC * 1000) << " MSEC ("
-			<< ((clock() - start) / (double) CLOCKS_PER_SEC * 1000) / 60000
-			<< " MIN) @ " << dataflow->rank << endl;
+		 << ((clock() - start) / (double)CLOCKS_PER_SEC * 1000) << " MSEC ("
+		 << ((clock() - start) / (double)CLOCKS_PER_SEC * 1000) / 60000
+		 << " MIN) @ " << dataflow->rank << endl;
 
 	delete dataflow;
 

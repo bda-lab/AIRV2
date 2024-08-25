@@ -31,23 +31,23 @@
  *      Author: vinu.venugopal
  */
 
-#ifndef USECASES_YSB_HPP_
-#define USECASES_YSB_HPP_
+#ifndef USECASES_YSB_Serialized_HPP_
+#define USECASES_YSB_Serialized_HPP_
 
 #include "../dataflow/Dataflow.hpp"
 
 using namespace std;
 
-class YSB : public Dataflow
+class YSB_Serialized : public Dataflow
 {
 
 public:
 	Vertex *generator, *filter, *join, *par_aggregate, *full_aggregate,
-		*buffer, *collector;
+		*serialized_buffer, *collector;
+    
+	YSB_Serialized(unsigned long tp);
 
-	YSB(unsigned long tp);
-
-	~YSB();
+	~YSB_Serialized();
 };
 
-#endif /* USECASES_YSB_HPP_ */
+#endif /* USECASES_YSB_Serialized_HPP_ */

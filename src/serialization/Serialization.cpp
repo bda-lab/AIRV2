@@ -116,8 +116,6 @@ void Serialization::YSBserializeDG(EventDG *event, Message *message)
 	char *b = message->buffer + message->size;
 	memcpy(b, &event->event_time, 8);
 	b += 8;
-	memcpy(b, &event->window_id, 8);
-	b += 8;
 	memcpy(b, &event->event_type, 9);
 	b += 9;
 	memcpy(b, event->ad_id, 37);
@@ -132,8 +130,6 @@ void Serialization::YSBdeserializeDG(Message *message, EventDG *event,
 	char *b = message->buffer + offset;
 	memcpy(&event->event_time, b, 8);
 	b += 8;
-	memcpy(&event->window_id, b, 8);
-	b += 8;
 	memcpy(&event->event_type, b, 9);
 	b += 9;
 	memcpy(event->ad_id, b, 37);
@@ -143,7 +139,7 @@ void Serialization::YSBdeserializeDG(Message *message, EventDG *event,
 
 void Serialization::YSBprintDG(EventDG *event)
 {
-	cout << "event_time: " << event->event_time << "\twindow id: " << event->window_id << "\tevent_type: "
+	cout << "event_time: " << event->event_time << "\tevent_type: "
 		 << event->event_type << "\tad_id: " << event->ad_id
 		 << "\tuser_id, page_id, ip_address: "
 		 << event->userid_pageid_ipaddress << endl;
@@ -166,8 +162,6 @@ void Serialization::YSBserializeFT(EventFT *event, Message *message)
 	char *b = message->buffer + message->size;
 	memcpy(b, &event->event_time, 8);
 	b += 8;
-	memcpy(b, &event->window_id, 8);
-	b += 8;
 	memcpy(b, event->ad_id, 37);
 	message->size += sizeof(EventFT);
 }
@@ -186,14 +180,12 @@ void Serialization::YSBdeserializeFT(Message *message, EventFT *event,
 	char *b = message->buffer + offset;
 	memcpy(&event->event_time, b, 8);
 	b += 8;
-	memcpy(&event->window_id, b, 8);
-	b += 8;
 	memcpy(event->ad_id, b, 37);
 }
 
 void Serialization::YSBprintFT(EventFT *event)
 {
-	cout << "event_time: " << event->event_time << "\twindow id" << event->window_id << "\tad_id: " << event->ad_id
+	cout << "event_time: " << event->event_time << "\tad_id: " << event->ad_id
 		 << endl;
 }
 
@@ -201,8 +193,6 @@ void Serialization::YSBserializeJ(EventJ *event, Message *message)
 {
 	char *b = message->buffer + message->size;
 	memcpy(b, &event->event_time, 8);
-	b += 8;
-	memcpy(b, &event->window_id, 8);
 	b += 8;
 	memcpy(b, event->c_id, 37);
 	message->size += sizeof(EventJ);
@@ -214,14 +204,12 @@ void Serialization::YSBdeserializeJ(Message *message, EventJ *event,
 	char *b = message->buffer + offset;
 	memcpy(&event->event_time, b, 8);
 	b += 8;
-	memcpy(&event->window_id, b, 8);
-	b += 8;
 	memcpy(event->c_id, b, 37);
 }
 
 void Serialization::YSBprintJ(EventJ *event)
 {
-	cout << "event_time: " << event->event_time << "\twindow_id: " << event->window_id << "\tc_id: " << event->c_id
+	cout << "event_time: " << event->event_time << "\tc_id: " << event->c_id
 		 << endl;
 }
 
@@ -229,8 +217,6 @@ void Serialization::YSBserializePA(EventPA *event, Message *message)
 {
 	char *b = message->buffer + message->size;
 	memcpy(b, &event->max_event_time, 8);
-	b += 8;
-	memcpy(b, &event->window_id, 8);
 	b += 8;
 	memcpy(b, &event->c_id, 8);
 	b += 8;
@@ -244,8 +230,6 @@ void Serialization::YSBdeserializePA(Message *message, EventPA *event,
 	char *b = message->buffer + offset;
 	memcpy(&event->max_event_time, b, 8);
 	b += 8;
-	memcpy(&event->window_id, b, 8);
-	b += 8;
 	memcpy(&event->c_id, b, 8);
 	b += 8;
 	memcpy(&event->count, b, 4);
@@ -255,7 +239,6 @@ void Serialization::YSBprintPA(EventPA *event)
 {
 	cout << "__________________________________________" << endl;
 	cout << "max_event_time: " << event->max_event_time << endl;
-	cout << "window id: " << event->window_id << endl;
 	cout << "c_id: " << event->c_id << endl;
 	cout << "count: " << event->count << endl;
 }
@@ -265,15 +248,11 @@ void Serialization::YSBserializePC(EventPC *event, Message *message)
 	char *b = message->buffer + message->size;
 	memcpy(b, &event->WID, 8);
 	b += 8;
-	memcpy(b, &event->window_id, 8);
-	b += 8;
 	memcpy(b, &event->c_id, 8);
 	b += 8;
 	memcpy(b, &event->count, 4);
 	b += 4;
-	memcpy(b, &event->latency, 4);
-	b += 4;
-	memcpy(b, &event->final_latency, 4);
+	memcpy(b, &event->latency, 8);
 	message->size += sizeof(EventPC);
 }
 
@@ -283,26 +262,20 @@ void Serialization::YSBdeserializePC(Message *message, EventPC *event,
 	char *b = message->buffer + offset;
 	memcpy(&event->WID, b, 8);
 	b += 8;
-	memcpy(&event->window_id, b, 8);
-	b += 8;
 	memcpy(&event->c_id, b, 8);
 	b += 8;
 	memcpy(&event->count, b, 4);
 	b += 4;
-	memcpy(&event->latency, b, 4);
-	b += 4;
-	memcpy(&event->final_latency, b, 4);
+	memcpy(&event->latency, b, 8);
 }
 
 void Serialization::YSBprintPC(EventPC *event)
 {
 	cout << "__________________________________________" << endl;
 	cout << "WID: " << event->WID << endl;
-	cout << "window id: " << event->window_id << endl;
 	cout << "c_id: " << event->c_id << endl;
 	cout << "count: " << event->count << endl;
 	cout << "latency: " << event->latency << endl;
-	cout << "final latency: " << event->final_latency << endl;
 }
 
 void Serialization::YSBserializeIdCnt(IdCount *event, Message *message)
