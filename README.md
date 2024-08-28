@@ -146,3 +146,14 @@ References:
 Code Walkthrough for Usecases:
 --------------------------------
 https://dapper-gray-a5d.notion.site/4c75265d7581438b9bcf6efc1c17a4b8?v=1b74396e33084cc0b5518ff921c04c82
+
+
+
+**Meeting 28/08/2024**
+Discussion points
+1. Asy. and Syc. Hew-meld implemenation for YSB - Chinmay (meeting with Chinmay rescheduled)
+2. The YSB* (RatioFinder) is missing - Naseela and Hima 
+Had detailed discussion on some aspects of the AIR code.
+
+   
+
