@@ -278,6 +278,41 @@ void Serialization::YSBprintPC(EventPC *event)
 	cout << "latency: " << event->latency << endl;
 }
 
+void Serialization::YSBserializeSlice(EventSlice *event, Message *message)
+{
+	char *b = message->buffer + message->size;
+	memcpy(b, &event->slice_id, 8);
+	b += 8;
+	memcpy(b, &event->c_id, 8);
+	b += 8;
+	memcpy(b, &event->count, 4);
+	b += 4;
+	memcpy(b, &event->latency, 8);
+	message->size += sizeof(EventSlice);
+}
+
+void Serialization::YSBdeserializeSlice(Message *message, EventSlice *event,
+										int offset)
+{
+	char *b = message->buffer + offset;
+	memcpy(&event->slice_id, b, 8);
+	b += 8;
+	memcpy(&event->c_id, b, 8);
+	b += 8;
+	memcpy(&event->count, b, 4);
+	b += 4;
+	memcpy(&event->latency, b, 8);
+}
+
+void Serialization::YSBprintSlice(EventSlice *event)
+{
+	cout << "__________________________________________" << endl;
+	cout << "slice_id: " << event->slice_id << endl;
+	cout << "c_id: " << event->c_id << endl;
+	cout << "count: " << event->count << endl;
+	cout << "latency: " << event->latency << endl;
+}
+
 void Serialization::YSBserializeIdCnt(IdCount *event, Message *message)
 {
 	char *b = message->buffer + message->size;

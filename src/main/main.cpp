@@ -51,6 +51,7 @@
 #include "../usecases/YSB.hpp"
 #include "../usecases/YSB_m.hpp"
 #include "../usecases/YSB_Serialized.hpp"
+#include "../usecases/YSB_MultiQuery.hpp"
 using namespace std;
 
 int main(int argc, char *argv[])
@@ -83,6 +84,10 @@ int main(int argc, char *argv[])
 		else if (s.compare("YSBS") == 0)
 		{
 			dataflow = new YSB_Serialized(tp);
+		}
+		else if (s.compare("YSBMQ") == 0)
+		{
+			dataflow = new YSB_MultiQuery(tp);
 		}
 	}
 	else

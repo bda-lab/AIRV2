@@ -227,7 +227,7 @@ void EventGenerator::getNextMessage(EventDG *event, WrapperUnit *wrapper_unit,
 
 	Serialization sede;
 
-	memcpy(event->ad_id, "3192274f-32f1-442b-8fc0-d5491664a447\0", 37); // default ad_id that would be replaced later
+	memcpy(event->ad_id, "8255f1e8-b185-48bd-a726-d0679757b82e\0", 37); // default ad_id that would be replaced later
 	memcpy(event->userid_pageid_ipaddress,
 		   "7ad5154e-b296-4b07-9cb8-15bb6a395b2f,328df5ff-0e4a-4f8e-b3ea-5c35d6a3fb3b,1.2.3.4\0",
 		   82); // default values that would be used for all the events
@@ -238,8 +238,8 @@ void EventGenerator::getNextMessage(EventDG *event, WrapperUnit *wrapper_unit,
 	int i = 0;
 	while (i < events_per_msg)
 	{
-
-		memcpy(event->ad_id, ad_ids[myrandom(0, 999)].c_str(), 36);
+		//Use the same ad_id for all events for debugging ysbmq
+		// memcpy(event->ad_id, ad_ids[myrandom(0, 999)].c_str(), 36);
 		event->event_time = time_now + (999 - i % 1000); // uniformly distribute event times among current message window, upper first
 		// event->event_time = (long int) (MPI_Wtime() * 1000);
 

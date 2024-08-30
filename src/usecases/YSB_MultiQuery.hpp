@@ -25,32 +25,29 @@
  **/
 
 /*
- * Message.cpp
+ * YSB.hpp
  *
- *  Created on: Nov 27, 2017
- *      Author: martin.theobald, amal.tawakuli, vinu.venugopal
+ *  Created on: Jun 18, 2018
+ *      Author: vinu.venugopal
  */
 
-#include "Message.hpp"
+#ifndef USECASES_YSB_MultiQuery_HPP_
+#define USECASES_YSB_MultiQuery_HPP_
+
+#include "../dataflow/Dataflow.hpp"
 
 using namespace std;
 
-Message::Message() : Window(MESSAGE_SIZE)
+class YSB_MultiQuery : public Dataflow
 {
-	this->wrapper_length = 0;
-}
 
-Message::Message(int capacity) : Window(capacity)
-{
-	this->wrapper_length = 0;
-}
+public:
+	Vertex *generator, *filter, *join, *par_aggregate, *slice_aggregator,
+		*serialized_buffer,*query_aggregator, *collector;
+    
+	YSB_MultiQuery(unsigned long tp);
 
-Message::Message(int capacity, int wrapper_length) : Window(capacity + sizeof(int) + wrapper_length * sizeof(WrapperUnit))
-{
-	this->wrapper_length = wrapper_length;
-}
+	~YSB_MultiQuery();
+};
 
-Message::~Message()
-{
-	// cout << "DELETE MESSAGE [" << capacity << "]." << endl;
-}
+#endif /* USECASES_YSB_MultiQuery_HPP_ */

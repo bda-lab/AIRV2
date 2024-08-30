@@ -76,6 +76,14 @@ typedef struct EventPC
 	long int latency;
 } EventPC;
 
+typedef struct EventSlice
+{
+	long int slice_id;
+	long int c_id;
+	int count;
+	long int latency;
+} EventSlice;
+
 typedef struct IdCount
 {
 	long int max_event_time;
@@ -150,6 +158,11 @@ public:
 
 	void YSBprintPC(EventPC *event);
 
+	void YSBserializeSlice(EventSlice *event, Message *message);
+
+	void YSBdeserializeSlice(Message *message, EventSlice *event, int offset);
+
+	void YSBprintSlice(EventSlice *event);
 	//-----for WIN_AGG use-case------
 
 	void YSBserializeIdCnt(IdCount *event, Message *message);

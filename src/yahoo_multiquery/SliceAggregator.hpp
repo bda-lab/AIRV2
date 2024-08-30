@@ -25,32 +25,45 @@
  **/
 
 /*
- * Message.cpp
+ * Aggregate.hpp
  *
- *  Created on: Nov 27, 2017
- *      Author: martin.theobald, amal.tawakuli, vinu.venugopal
+ *  Created on: 18, Dec, 2018
+ *      Author: vinu.venugopal
  */
 
-#include "Message.hpp"
+#ifndef OPERATOR_SliceAggregator_HPP_
+#define OPERATOR_SliceAggregator_HPP_
+
+#include <unordered_map>
+#include <utility>
+
+#include "../dataflow/Vertex.hpp"
 
 using namespace std;
 
-Message::Message() : Window(MESSAGE_SIZE)
-{
-	this->wrapper_length = 0;
-}
+typedef std::pair<int, long int> count_maxeventtime;
+typedef unordered_map<long int, count_maxeventtime> InnerHMap;
+typedef unordered_map<long int, unordered_map<long int, count_maxeventtime>> OuterHMap;
+typedef unordered_map<long int, std::pair<int, int>> WIDtoWrapperUnitHMap;
 
-Message::Message(int capacity) : Window(capacity)
-{
-	this->wrapper_length = 0;
-}
+class SliceAggregator: public Vertex {
 
-Message::Message(int capacity, int wrapper_length) : Window(capacity + sizeof(int) + wrapper_length * sizeof(WrapperUnit))
-{
-	this->wrapper_length = wrapper_length;
-}
+public:
 
-Message::~Message()
-{
-	// cout << "DELETE MESSAGE [" << capacity << "]." << endl;
-}
+	OuterHMap WIDtoIHM;
+	pthread_mutex_t WIDtoIHM_mutex;
+
+	WIDtoWrapperUnitHMap WIDtoWrapperUnit;
+	pthread_mutex_t WIDtoWrapperUnit_mutex;
+
+	SliceAggregator(int tag, int rank, int worldSize);
+
+	~SliceAggregator();
+
+	void batchProcess();
+
+	void streamProcess(int channel);
+
+};
+
+#endif /* OPERATOR_SliceAggregator_HPP_ */

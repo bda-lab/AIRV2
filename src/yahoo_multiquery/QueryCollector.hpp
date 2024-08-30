@@ -25,32 +25,40 @@
  **/
 
 /*
- * Message.cpp
+ * QueryCollector.hpp
  *
- *  Created on: Nov 27, 2017
- *      Author: martin.theobald, amal.tawakuli, vinu.venugopal
+ *  Created on: Dec 26, 2018
+ *      Author: vinu.venugopal
  */
 
-#include "Message.hpp"
+#ifndef COLLECTOR_QueryCollector_HPP_
+#define COLLECTOR_QueryCollector_HPP_
+
+#include "../dataflow/Vertex.hpp"
+#include <fstream>
+#include <string>
 
 using namespace std;
 
-Message::Message() : Window(MESSAGE_SIZE)
+class QueryCollector : public Vertex
 {
-	this->wrapper_length = 0;
-}
 
-Message::Message(int capacity) : Window(capacity)
-{
-	this->wrapper_length = 0;
-}
+public:
+    // Global stats
+    long int sum_latency;
+    long int sum_counts;
+    int num_messages;
 
-Message::Message(int capacity, int wrapper_length) : Window(capacity + sizeof(int) + wrapper_length * sizeof(WrapperUnit))
-{
-	this->wrapper_length = wrapper_length;
-}
+    QueryCollector(int tag, int rank, int worldSize);
 
-Message::~Message()
-{
-	// cout << "DELETE MESSAGE [" << capacity << "]." << endl;
-}
+    ~QueryCollector();
+
+    void batchProcess();
+
+    void streamProcess(int channel);
+
+private:
+    std::ofstream datafile;
+};
+
+#endif /* COLLECTOR_QueryCollector_HPP_ */

@@ -250,11 +250,11 @@ void FullAggregator::streamProcess(int channel)
 
 			pthread_mutex_unlock(&WIDtoIHM_mutex); //====================================================================
 			// To simulate the delay in the network
-			 if (rank == 0)
-			 {
-			 	// cout<<"Rank 0 is sleeping for 2 seconds\n";
-			 	sleep(2);
-			 }
+			//  if (rank == 0)
+			//  {
+			//  	// cout<<"Rank 0 is sleeping for 2 seconds\n";
+			//  	sleep(2);
+			//  }
 			//  Finally send message to a single collector on rank 0
 			int n = 0;
 			for (vector<Vertex *>::iterator v = next.begin(); v != next.end();

@@ -94,6 +94,8 @@ add_executable(AIR
         src/usecases/YSB_m.hpp
         src/usecases/YSB_Serialized.cpp
         src/usecases/YSB_Serialized.hpp
+        src/usecases/YSB_MultiQuery.cpp
+        src/usecases/YSB_MultiQuery.hpp
         src/winagg/EventSharder.cpp
         src/winagg/EventSharder.hpp
         src/winagg/WindowedCounter.cpp
@@ -112,6 +114,12 @@ add_executable(AIR
         src/yahoo/SHJoin.hpp
         src/yahoo_serialized/SerializedCollector.cpp
         src/yahoo_serialized/SerializedCollector.hpp
+        src/yahoo_multiquery/SliceAggregator.cpp
+        src/yahoo_multiquery/SliceAggregator.hpp
+        src/yahoo_multiquery/QueryAggregator.cpp
+        src/yahoo_multiquery/QueryAggregator.hpp
+        src/yahoo_multiquery/QueryCollector.cpp
+        src/yahoo_multiquery/QueryCollector.hpp
         src/yahoo_m/EventFilter_m.cpp
         src/yahoo_m/EventFilter_m.hpp
         src/yahoo_m/FullAggregator_m.cpp
