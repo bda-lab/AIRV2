@@ -135,7 +135,7 @@ void QueryCollector::streamProcess(int channel)
 			sum_counts += event_count; // count of distinct c_id's processed
 			num_messages++;
 
-			std::cout << "\n  #" << num_messages << "Query " << (rank + 1) << " COUNT: " << count
+			std::cout << "\n  #" << num_messages << "\tQuery " << (rank + 1) << "\tCOUNT: " << count
 					  << "\tAVG_LATENCY: " << ((double)sum_latency / sum_counts) / 1000.0 << "\tGlobal Sum Counts: " << sum_counts << "\tGlobal Sum Latency: " << sum_latency << "\tN=" << event_count << "\n"
 					  << endl;
 
