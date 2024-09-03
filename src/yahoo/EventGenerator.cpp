@@ -113,8 +113,7 @@ void EventGenerator::streamProcess(int channel)
 		while (msg_count < PER_SEC_MSG_COUNT)
 		{
 
-			outMessagesPerSec[msg_count] = new Message(
-				events_per_msg * sizeof(EventDG), wrappers_per_msg);
+			outMessagesPerSec[msg_count] = new Message(events_per_msg * sizeof(EventDG), wrappers_per_msg);
 
 			// Message header
 			long int time_now = (start_time + iteration_count) * 1000;
@@ -122,16 +121,12 @@ void EventGenerator::streamProcess(int channel)
 			wrapper_unit.completeness_tag_numerator = 1;
 			wrapper_unit.completeness_tag_denominator = PER_SEC_MSG_COUNT * worldSize * AGG_WIND_SPAN / 1000;
 
-			memcpy(outMessagesPerSec[msg_count]->buffer, &wrappers_per_msg,
-				   sizeof(int));
-			memcpy(outMessagesPerSec[msg_count]->buffer + sizeof(int),
-				   &wrapper_unit, sizeof(WrapperUnit));
+			memcpy(outMessagesPerSec[msg_count]->buffer, &wrappers_per_msg, sizeof(int));
+			memcpy(outMessagesPerSec[msg_count]->buffer + sizeof(int), &wrapper_unit, sizeof(WrapperUnit));
 			outMessagesPerSec[msg_count]->size += sizeof(int) + outMessagesPerSec[msg_count]->wrapper_length * sizeof(WrapperUnit);
 
 			// Message body
-			getNextMessage(&eventDG, &wrapper_unit,
-						   outMessagesPerSec[msg_count], events_per_msg, time_now);
-
+			getNextMessage(&eventDG, &wrapper_unit, outMessagesPerSec[msg_count], events_per_msg, time_now);
 			// Debug output ---
 			Serialization sede;
 			//			WrapperUnit wu;
@@ -238,8 +233,8 @@ void EventGenerator::getNextMessage(EventDG *event, WrapperUnit *wrapper_unit,
 	int i = 0;
 	while (i < events_per_msg)
 	{
-		//Use the same ad_id for all events for debugging ysbmq
-		memcpy(event->ad_id, ad_ids[myrandom(0, 999)].c_str(), 36);
+		// Use the same ad_id for all events for debugging ysbmq
+		// memcpy(event->ad_id, ad_ids[myrandom(0, 999)].c_str(), 36);
 		event->event_time = time_now + (999 - i % 1000); // uniformly distribute event times among current message window, upper first
 		// event->event_time = (long int) (MPI_Wtime() * 1000);
 

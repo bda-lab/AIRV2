@@ -45,8 +45,9 @@
 
 using namespace std;
 
-QueryAggregator::QueryAggregator(int tag, int rank, int worldSize) : Vertex(tag, rank, worldSize)
+QueryAggregator::QueryAggregator(int tag, int rank, int worldSize, int q) : Vertex(tag, rank, worldSize)
 {
+    queries = q;
     D(cout << "QueryAggregator [" << tag << "] CREATED @ " << rank << endl;);
     pthread_mutex_init(&WIDtoIHM_mutex, NULL);
     pthread_mutex_init(&WIDtoWrapperUnit_mutex, NULL);
@@ -149,177 +150,14 @@ void QueryAggregator::streamProcess(int channel)
 
         delete tmpMessages;
     }
-    // else if (rank == 1)
-    //     else
-    //     {
-    //         Message *inMessage, *outMessage;
-    //         list<Message *> *tmpMessages = new list<Message *>();
-    //         Serialization sede;
-
-    //         WIDtoWrapperUnitHMap::iterator WIDtoWrapperUnit_it;
-    //         OuterHMap::iterator WIDtoIHM_it;
-    //         InnerHMap::iterator CIDtoCountAndMaxEventTime_it;
-
-    //         EventSlice eventSlice;
-    //         EventPC eventPC;
-
-    //         std::unordered_map<long int, InnerHMap> WIDtoIHM;
-
-    //         int c = 0;
-    //         while (ALIVE)
-    //         {
-    //             // cout << "Iteration number: " << c << endl;
-    //             for (auto &it : slicePresenceMap)
-    //             {
-    //                 // cout << "WID: " << it.first.first << ", Rank: " << it.first.second << endl;
-    //                 for (auto &it2 : it.second)
-    //                 {
-    //                     // cout << "Slice ID: " << it2 << endl;
-    //                 }
-    //             }
-
-    //             pthread_mutex_lock(&listenerMutexes[channel]);
-
-    //             while (inMessages[channel].empty())
-    //                 pthread_cond_wait(&listenerCondVars[channel], &listenerMutexes[channel]);
-
-    //             while (!inMessages[channel].empty())
-    //             {
-    //                 inMessage = inMessages[channel].front();
-    //                 inMessages[channel].pop_front();
-    //                 tmpMessages->push_back(inMessage);
-    //             }
-
-    //             pthread_mutex_unlock(&listenerMutexes[channel]);
-
-    //             while (!tmpMessages->empty())
-    //             {
-    //                 inMessage = tmpMessages->front();
-    //                 tmpMessages->pop_front();
-
-    //                 // cout << "QueryAggregator->POP MESSAGE: TAG [" << tag << "] @ "
-    //                 //      << rank << " CHANNEL " << channel << " BUFFER "
-    //                 //      << inMessage->size << endl;
-
-    //                 long int WID;
-    //                 list<long int> completed_windows;
-
-    //                 int event_count = (inMessage->size) / sizeof(EventSlice);
-    //                 pthread_mutex_lock(&WIDtoIHM_mutex);
-    //                 outMessage = new Message(sizeof(EventPC) * 100); // Create new message with max. required capacity
-
-    //                 for (int i = 0; i < event_count; i++)
-    //                 {
-    //                     sede.YSBdeserializeSlice(inMessage, &eventSlice, i * sizeof(EventSlice));
-    //                     // sede.YSBprintSlice(&eventSlice);
-    //                     WID = eventSlice.slice_id / (rank + 1);
-    //                     std::pair<long int, int> wid_rank_pair = std::make_pair(WID, rank);
-    //                     slicePresenceMap[wid_rank_pair].insert(eventSlice.slice_id);
-    //                     // cout << "The computed wid is " << WID << " for slice id " << eventSlice.slice_id << " and size: " << slicePresenceMap[wid_rank_pair].size() << endl;
-
-    //                     if (slicePresenceMap[wid_rank_pair].size() == (rank + 1))
-    //                     {
-    //                         // cout << "All slices are present for wid: " << WID << " and rank: " << rank << endl;
-    //                         completed_windows.push_back(WID);
-    //                         slicePresenceMap.erase(wid_rank_pair); // Remove WID from tracking map once complete
-    //                     }
-
-    //                     WIDtoIHM_it = WIDtoIHM.find(WID);
-    //                     if (WIDtoIHM_it != WIDtoIHM.end())
-    //                     {
-    //                         CIDtoCountAndMaxEventTime_it = WIDtoIHM_it->second.find(eventSlice.c_id);
-    //                         if (CIDtoCountAndMaxEventTime_it != WIDtoIHM_it->second.end())
-    //                         {
-    //                             cout << " Update count and max event time for cid " << eventSlice.c_id << " in WID " << WID << endl;
-    //                             CIDtoCountAndMaxEventTime_it->second.first += eventSlice.count;
-    //                             if (CIDtoCountAndMaxEventTime_it->second.second < eventSlice.latency)
-    //                                 CIDtoCountAndMaxEventTime_it->second.second = eventSlice.latency;
-    //                         }
-    //                         else
-    //                         {
-    //                             // cout << " New entry for this CID " << eventSlice.c_id << endl;
-    //                             WIDtoIHM_it->second[eventSlice.c_id] = std::make_pair(eventSlice.count, eventSlice.latency);
-    //                         }
-    //                     }
-    //                     else
-    //                     {
-    //                         // New entry for this WID
-    //                         // cout << " New entry for this WID " << WID << endl;
-    //                         InnerHMap newInnerMap;
-    //                         newInnerMap[eventSlice.c_id] = std::make_pair(eventSlice.count, eventSlice.latency);
-    //                         WIDtoIHM[WID] = newInnerMap;
-    //                     }
-    //                 }
-
-    //                 while (!completed_windows.empty())
-    //                 {
-    //                     WID = completed_windows.front();
-    //                     completed_windows.pop_front();
-
-    //                     outMessage = new Message(sizeof(EventPC) * 100); // Create new message with max. required capacity
-
-    //                     WIDtoIHM_it = WIDtoIHM.find(WID);
-    //                     if (WIDtoIHM_it != WIDtoIHM.end())
-    //                     {
-    //                         for (CIDtoCountAndMaxEventTime_it = WIDtoIHM_it->second.begin();
-    //                              CIDtoCountAndMaxEventTime_it != WIDtoIHM_it->second.end();
-    //                              CIDtoCountAndMaxEventTime_it++)
-    //                         {
-    //                             eventPC.WID = WID;
-    //                             eventPC.c_id = CIDtoCountAndMaxEventTime_it->first;
-    //                             eventPC.count = CIDtoCountAndMaxEventTime_it->second.first;
-    //                             eventPC.latency = CIDtoCountAndMaxEventTime_it->second.second;
-
-    //                             sede.YSBserializePC(&eventPC, outMessage);
-    //                             // sede.YSBprintPC(&eventPC);
-    //                         }
-
-    //                         WIDtoIHM_it->second.clear(); // Clear inner map
-    //                         WIDtoIHM.erase(WID);         // Remove from outer map
-    //                     }
-    //                 }
-
-    //                 pthread_mutex_unlock(&WIDtoIHM_mutex);
-
-    //                 for (vector<Vertex *>::iterator v = next.begin(); v != next.end(); ++v)
-    //                 {
-    //                     if (outMessage && outMessage->size > 0)
-    //                     {
-    //                         int idx = rank; // Channel equal to rank number
-    //                         pthread_mutex_lock(&senderMutexes[idx]);
-    //                         outMessages[idx].push_back(outMessage);
-
-    //                         // cout << "SliceAggregator->PUSHBACK MESSAGE [" << tag << "] #"
-    //                         //      << " @ " << rank << " IN-CHANNEL " << channel
-    //                         //      << " OUT-CHANNEL " << idx << " SIZE "
-    //                         //      << outMessage->size << " CAP "
-    //                         //      << outMessage->capacity << endl;
-
-    //                         pthread_cond_signal(&senderCondVars[idx]);
-    //                         pthread_mutex_unlock(&senderMutexes[idx]);
-    //                     }
-    //                 }
-    //                 delete inMessage;
-    //                 c++;
-    //             }
-
-    //             tmpMessages->clear();
-    //         }
-
-    //         delete tmpMessages;
-    //     }
-    // }
-    else
+    else if (rank < queries)
     {
         Message *inMessage, *outMessage;
         list<Message *> *tmpMessages = new list<Message *>();
         Serialization sede;
 
-        
-
         EventSlice eventSlice;
         EventPC eventPC;
-
 
         int c = 0;
         while (ALIVE)

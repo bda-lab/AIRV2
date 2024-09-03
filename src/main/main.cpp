@@ -60,15 +60,19 @@ int main(int argc, char *argv[])
 	Dataflow *dataflow = nullptr;
 	bool batchflag = false;
 	unsigned long tp = 10000;
-
+	int queries = 1;
 	if (argc > 1)
 	{
 
-		if (argc > 2)
+		if (argc == 2)
 		{
 			tp = atol(argv[2]);
 		}
-
+		else if (argc > 2)
+		{
+			tp = atol(argv[2]);
+			queries = atoi(argv[3]);
+		}
 		string s(argv[1]);
 
 		if (s.compare("YSB") == 0)
@@ -87,7 +91,7 @@ int main(int argc, char *argv[])
 		}
 		else if (s.compare("YSBMQ") == 0)
 		{
-			dataflow = new YSB_MultiQuery(tp);
+			dataflow = new YSB_MultiQuery(tp, queries);
 		}
 	}
 	else

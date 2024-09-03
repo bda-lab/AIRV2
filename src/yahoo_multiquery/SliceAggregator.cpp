@@ -12,8 +12,9 @@
 
 using namespace std;
 
-SliceAggregator::SliceAggregator(int tag, int rank, int worldSize) : Vertex(tag, rank, worldSize)
+SliceAggregator::SliceAggregator(int tag, int rank, int worldSize, int q) : Vertex(tag, rank, worldSize)
 {
+    queries = q;
     D(cout << "SliceAggregator [" << tag << "] CREATED @ " << rank << endl;);
     pthread_mutex_init(&WIDtoIHM_mutex, NULL);
     pthread_mutex_init(&WIDtoWrapperUnit_mutex, NULL);
@@ -35,7 +36,8 @@ void SliceAggregator::streamProcess(int channel)
     D(cout << "FULLAGGREGATOR->STREAMPROCESS [" << tag << "] @ " << rank
            << " IN-CHANNEL " << channel << endl;);
 
-    Message *inMessage, *outMessage = nullptr, *outMessage1 = nullptr, *outMessage2 = nullptr, *outMessage3 = nullptr;
+    Message *inMessage;
+    Message *outMessage[queries];
     list<Message *> *tmpMessages = new list<Message *>();
     Serialization sede;
 
@@ -49,6 +51,8 @@ void SliceAggregator::streamProcess(int channel)
 
     while (ALIVE)
     {
+        // cout << "FULLAGGREGATOR->STREAMPROCESS [" << tag << "] @ " << rank
+        //      << " IN-CHANNEL " << channel << "Queries: " << queries << endl;
         pthread_mutex_lock(&listenerMutexes[channel]);
 
         while (inMessages[channel].empty())
@@ -115,22 +119,11 @@ void SliceAggregator::streamProcess(int channel)
             }
 
             int offset = sizeof(int) + (inMessage->wrapper_length * sizeof(WrapperUnit));
-            // int wrappers_per_msg = 1;
-            outMessage = new Message(sizeof(EventSlice) * 100);  // create new message with max. required capacity
-            outMessage1 = new Message(sizeof(EventSlice) * 100); // create new message with max. required capacity
-            outMessage2 = new Message(sizeof(EventSlice) * 100); // create new message with max. required capacity
-            outMessage3 = new Message(sizeof(EventSlice) * 100); // create new message with max. required capacity
-            // outMessage = new Message(sizeof(EventSlice) * 100, wrappers_per_msg);
-            // memcpy(outMessage->buffer, &wrappers_per_msg, sizeof(int));
 
-            // outMessage1 = new Message(sizeof(EventSlice) * 100, wrappers_per_msg);
-            // memcpy(outMessage1->buffer, &wrappers_per_msg, sizeof(int));
-
-            // outMessage2 = new Message(sizeof(EventSlice) * 100, wrappers_per_msg);
-            // memcpy(outMessage2->buffer, &wrappers_per_msg, sizeof(int));
-
-            // outMessage3 = new Message(sizeof(EventSlice) * 100, wrappers_per_msg);
-            // memcpy(outMessage3->buffer, &wrappers_per_msg, sizeof(int));
+            for (int i = 0; i < queries; i++)
+            {
+                outMessage[i] = new Message(sizeof(EventSlice) * 100); // create new message with max. required capacity
+            }
 
             pthread_mutex_lock(&WIDtoIHM_mutex);
 
@@ -180,30 +173,6 @@ void SliceAggregator::streamProcess(int channel)
                 {
                     j = 0;
 
-                    // wrapper_unit.completeness_tag_numerator = WID / 1;
-                    // wrapper_unit.completeness_tag_denominator = WID / 1;
-                    // wrapper_unit.window_start_time = WID;
-                    // memcpy(outMessage->buffer + sizeof(int), &wrapper_unit, sizeof(WrapperUnit));
-                    // outMessage->size += sizeof(WrapperUnit);
-
-                    // wrapper_unit1.completeness_tag_numerator = WID / 2;
-                    // wrapper_unit1.completeness_tag_denominator = WID / 2;
-                    // wrapper_unit1.window_start_time = WID;
-                    // memcpy(outMessage1->buffer + sizeof(int), &wrapper_unit1, sizeof(WrapperUnit));
-                    // outMessage1->size += sizeof(WrapperUnit);
-
-                    // wrapper_unit2.completeness_tag_numerator = WID / 3;
-                    // wrapper_unit2.completeness_tag_denominator = WID / 3;
-                    // wrapper_unit2.window_start_time = WID;
-                    // memcpy(outMessage2->buffer + sizeof(int), &wrapper_unit2, sizeof(WrapperUnit));
-                    // outMessage2->size += sizeof(WrapperUnit);
-
-                    // wrapper_unit3.completeness_tag_numerator = WID / 4;
-                    // wrapper_unit3.completeness_tag_denominator = WID / 4;
-                    // wrapper_unit3.window_start_time = WID;
-                    // memcpy(outMessage3->buffer + sizeof(int), &wrapper_unit3, sizeof(WrapperUnit));
-                    // outMessage3->size += sizeof(WrapperUnit);
-
                     for (CIDtoCountAndMaxEventTime_it = WIDtoIHM_it->second.begin();
                          CIDtoCountAndMaxEventTime_it != WIDtoIHM_it->second.end();
                          CIDtoCountAndMaxEventTime_it++)
@@ -213,22 +182,12 @@ void SliceAggregator::streamProcess(int channel)
                         eventSlice.count = CIDtoCountAndMaxEventTime_it->second.first;
                         eventSlice.latency = CIDtoCountAndMaxEventTime_it->second.second;
 
-                        sede.YSBserializeSlice(&eventSlice, outMessage);
-                        // sede.YSBprintSlice(&eventSlice);
-                        // sede.printWrapper(&wrapper_unit);
-                        // cout << "***************************************************************************************************" << endl;
-                        sede.YSBserializeSlice(&eventSlice, outMessage1);
-                        // sede.YSBprintSlice(&eventSlice);
-                        // sede.printWrapper(&wrapper_unit1);
-                        // cout << "***************************************************************************************************" << endl;
-                        sede.YSBserializeSlice(&eventSlice, outMessage2);
-                        // sede.YSBprintSlice(&eventSlice);
-                        // sede.printWrapper(&wrapper_unit2);
-                        // cout << "***************************************************************************************************" << endl;
-                        sede.YSBserializeSlice(&eventSlice, outMessage3);
-                        // sede.YSBprintSlice(&eventSlice);
-                        // sede.printWrapper(&wrapper_unit3);
-                        // cout << "***************************************************************************************************" << endl;
+                        for (int i = 0; i < queries; i++)
+                        {
+                            sede.YSBserializeSlice(&eventSlice, outMessage[i]);
+                            // sede.YSBprintSlice(&eventSlice);
+                            // cout << "***************************************************************************************************" << endl;
+                        }
 
                         j++;
                     }
@@ -244,68 +203,23 @@ void SliceAggregator::streamProcess(int channel)
             int idx;
             for (vector<Vertex *>::iterator v = next.begin(); v != next.end(); ++v)
             {
-                if (outMessage && outMessage->size > 0)
+                for (int i = 0; i < queries; i++)
                 {
-                    idx = 0; // Channel for rank 0
-                    pthread_mutex_lock(&senderMutexes[idx]);
-                    outMessages[idx].push_back(outMessage);
+                    if (outMessage[i] && outMessage[i]->size > 0)
+                    {
+                        idx = i; // always keep workload on same rank
+                        pthread_mutex_lock(&senderMutexes[idx]);
+                        outMessages[idx].push_back(outMessage[i]);
 
-                    // cout << "SliceAggregator->PUSHBACK MESSAGE [" << tag << "] #"
-                    //      << " @ " << rank << " IN-CHANNEL " << channel
-                    //      << " OUT-CHANNEL " << idx << " SIZE "
-                    //      << outMessage->size << " CAP "
-                    //      << outMessage->capacity << endl;
+                        D(cout << "FULLAGGREGATOR->PIPELINE MESSAGE [" << tag << "] #"
+                               << " @ " << rank << " IN-CHANNEL " << channel
+                               << " OUT-CHANNEL " << idx << " SIZE "
+                               << outMessage[i]->size << " CAP "
+                               << outMessage[i]->capacity << endl;)
 
-                    pthread_cond_signal(&senderCondVars[idx]);
-                    pthread_mutex_unlock(&senderMutexes[idx]);
-                }
-
-                if (outMessage1 && outMessage1->size > 0)
-                {
-                    idx = 1; // Channel for rank 1
-                    pthread_mutex_lock(&senderMutexes[idx]);
-                    outMessages[idx].push_back(outMessage1);
-
-                    // cout << "SliceAggregator->PUSHBACK MESSAGE [" << tag << "] #"
-                    //      << " @ " << rank << " IN-CHANNEL " << channel
-                    //      << " OUT-CHANNEL " << idx << " SIZE "
-                    //      << outMessage1->size << " CAP "
-                    //      << outMessage1->capacity << endl;
-
-                    pthread_cond_signal(&senderCondVars[idx]);
-                    pthread_mutex_unlock(&senderMutexes[idx]);
-                }
-
-                if (outMessage2 && outMessage2->size > 0)
-                {
-                    idx = 2; // Channel for rank 2
-                    pthread_mutex_lock(&senderMutexes[idx]);
-                    outMessages[idx].push_back(outMessage2);
-
-                    // cout << "SliceAggregator->PUSHBACK MESSAGE [" << tag << "] #"
-                    //      << " @ " << rank << " IN-CHANNEL " << channel
-                    //      << " OUT-CHANNEL " << idx << " SIZE "
-                    //      << outMessage2->size << " CAP "
-                    //      << outMessage2->capacity << endl;
-
-                    pthread_cond_signal(&senderCondVars[idx]);
-                    pthread_mutex_unlock(&senderMutexes[idx]);
-                }
-
-                if (outMessage3 && outMessage3->size > 0)
-                {
-                    idx = 3; // Channel for rank 3
-                    pthread_mutex_lock(&senderMutexes[idx]);
-                    outMessages[idx].push_back(outMessage3);
-
-                    // cout << "SliceAggregator->PUSHBACK MESSAGE [" << tag << "] #"
-                    //      << " @ " << rank << " IN-CHANNEL " << channel
-                    //      << " OUT-CHANNEL " << idx << " SIZE "
-                    //      << outMessage3->size << " CAP "
-                    //      << outMessage3->capacity << endl;
-
-                    pthread_cond_signal(&senderCondVars[idx]);
-                    pthread_mutex_unlock(&senderMutexes[idx]);
+                        pthread_cond_signal(&senderCondVars[idx]);
+                        pthread_mutex_unlock(&senderMutexes[idx]);
+                    }
                 }
             }
 

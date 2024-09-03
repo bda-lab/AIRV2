@@ -46,22 +46,22 @@ using namespace std;
  * pair and the event timestamp of the latest record generated that belongs to that bucket.
  **/
 
-YSB_MultiQuery::YSB_MultiQuery(unsigned long throughput) : Dataflow()
+YSB_MultiQuery::YSB_MultiQuery(unsigned long throughput, int queries) : Dataflow()
 {
 
     generator = new EventGenerator(1, rank, worldSize, throughput);
     filter = new EventFilter(2, rank, worldSize);
     join = new SHJoin(3, rank, worldSize);
     par_aggregate = new PartialAggregator(4, rank, worldSize);
-    slice_aggregator = new SliceAggregator(5, rank, worldSize);
-    query_aggregator = new QueryAggregator(6, rank, worldSize);
+    slice_aggregator = new SliceAggregator(5, rank, worldSize, queries);
+    query_aggregator = new QueryAggregator(6, rank, worldSize,queries);
     collector = new QueryCollector(7, rank, worldSize);
 
     addLink(generator, filter);
     addLink(filter, join);
     addLink(join, par_aggregate);
     addLink(par_aggregate, slice_aggregator);
-    addLink(slice_aggregator,query_aggregator);
+    addLink(slice_aggregator, query_aggregator);
     addLink(query_aggregator, collector);
 
     generator->initialize();

@@ -43,9 +43,9 @@ class YSB_MultiQuery : public Dataflow
 
 public:
 	Vertex *generator, *filter, *join, *par_aggregate, *slice_aggregator,
-		*serialized_buffer,*query_aggregator, *collector;
-    
-	YSB_MultiQuery(unsigned long tp);
+		*serialized_buffer, *query_aggregator, *collector;
+
+	YSB_MultiQuery(unsigned long tp, int queries);
 
 	~YSB_MultiQuery();
 };

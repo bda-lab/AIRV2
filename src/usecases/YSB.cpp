@@ -59,7 +59,7 @@ YSB::YSB(unsigned long throughput) : Dataflow()
 	addLink(filter, join);
 	addLink(join, par_aggregate);
 	addLink(par_aggregate, full_aggregate);
-	addLink(full_aggregate,collector);
+	addLink(full_aggregate, collector);
 
 	generator->initialize();
 	filter->initialize();

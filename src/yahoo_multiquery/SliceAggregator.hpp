@@ -55,8 +55,8 @@ public:
 
 	WIDtoWrapperUnitHMap WIDtoWrapperUnit;
 	pthread_mutex_t WIDtoWrapperUnit_mutex;
-
-	SliceAggregator(int tag, int rank, int worldSize);
+	int queries;
+	SliceAggregator(int tag, int rank, int worldSize, int q);
 
 	~SliceAggregator();
 

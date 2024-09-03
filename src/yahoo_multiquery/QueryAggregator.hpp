@@ -64,18 +64,18 @@ class QueryAggregator : public Vertex
 public:
     OuterHMap WIDtoIHM;
     pthread_mutex_t WIDtoIHM_mutex;
-
     WIDtoWrapperUnitHMap WIDtoWrapperUnit;
     pthread_mutex_t WIDtoWrapperUnit_mutex;
     SlicePresenceMap slicePresenceMap;
     WIDtoWrapperUnitHMap::iterator WIDtoWrapperUnit_it;
     OuterHMap::iterator WIDtoIHM_it;
     InnerHMap::iterator CIDtoCountAndMaxEventTime_it;
+    int queries;
     // std::unordered_map<long int, InnerHMap> WIDtoIHM;
 
     // WIDToIHM WIDtoIHM;
 
-    QueryAggregator(int tag, int rank, int worldSize);
+    QueryAggregator(int tag, int rank, int worldSize, int q);
 
     ~QueryAggregator();
 
