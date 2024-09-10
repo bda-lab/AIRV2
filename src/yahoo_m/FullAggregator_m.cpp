@@ -128,8 +128,11 @@ void FullAggregatorM::streamProcess(int channel) {
 
 				WID = wrapper_unit.window_start_time / AGG_WIND_SPAN;
 
+				//cout << "Processing WID: " << WID << " @ Rank: " << rank << endl;
+
 				if (wrapper_unit.completeness_tag_denominator == 1) {
 					completed_windows.push_back(WID);
+					cout << "WID " << WID << " is complete (denominator == 1)." << endl;
 				} else {
 					pthread_mutex_lock(&WIDtoWrapperUnit_mutex); //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -289,16 +292,18 @@ void FullAggregatorM::streamProcess(int channel) {
 //					sending simply to the first channel -- sharding is not performed here,
 //					since one message would contain multiple window aggregation results!
 					int idx = 0 + WID % worldSize; // "0" indicates the first succeeding operator
-cout<<"sending out data by rank-"<<rank<<" operator to channel-"<<idx<<endl;
+					//cout << "Sending out data for WID: " << WID << " by rank-"
+                      // << rank << " operator to channel-" << idx << endl;
+                   //  cout<<"sending out data by rank-"<<rank<<" operator to channel-"<<idx<<endl;
 					// Normal mode: synchronize on outgoing message channel & send message
 					pthread_mutex_lock(&senderMutexes[idx]);
 					outMessages[idx].push_back(outMessage);
 
-					cout << "FULLAGGREGATOR->PUSHBACK MESSAGE [" << tag << "] #"
+					D(cout << "FULLAGGREGATOR->PUSHBACK MESSAGE [" << tag << "] #"
 							<< c << " @ " << rank << " IN-CHANNEL " << channel
 							<< " OUT-CHANNEL " << idx << " SIZE "
 							<< outMessage->size << " CAP "
-							<< outMessage->capacity << endl;
+							<< outMessage->capacity << endl;)
 
 					pthread_cond_signal(&senderCondVars[idx]);
 					pthread_mutex_unlock(&senderMutexes[idx]);

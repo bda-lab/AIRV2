@@ -25,29 +25,43 @@
  **/
 
 /*
- * YSB.hpp
+ * EventCollector.hpp
  *
- *  Created on: Feb 11, 2019
+ *  Created on: Dec 26, 2018
  *      Author: vinu.venugopal
  */
 
-#ifndef USECASES_YSB_M_HPP_
-#define USECASES_YSB_M_HPP_
+#ifndef COLLECTOR_EVENTCOLLECTOR_HPP_
+#define COLLECTOR_EVENTCOLLECTOR_HPP_
 
-#include "../dataflow/Dataflow.hpp"
+#include "../dataflow/Vertex.hpp"
+#include <fstream>
+#include <string>
 
 using namespace std;
 
-class YSB_m: public Dataflow {
+class EventCollectorM: public Vertex {
 
 public:
 
-	Vertex *generator, *filter, *joinClick, *joinView, *par_aggregateClick, *par_aggregateView, *full_aggregateClick, *full_aggregateView, *ratioFinder; //, *collector;
+	// Global stats
+	long int sum_latency;
+	long int sum_counts;
+	int num_messages;
 
-	YSB_m(unsigned long tp);
+	EventCollectorM(int tag, int rank, int worldSize);
 
-	~YSB_m();
+	~EventCollectorM();
+
+	void batchProcess();
+
+	void streamProcess(int channel);
+
+private:
+	std::ofstream datafile;
 
 };
 
-#endif /* USECASES_YSB_M_HPP_ */
+#endif /* COLLECTOR_EVENTCOLLECTOR_HPP_ */
+
+	

@@ -3,7 +3,7 @@ project(AIR)
 
 set(CMAKE_CXX_STANDARD 14)
 
-set(COMPILER_PATH "/usr/local/bin") # or /usr/local/bin
+set(COMPILER_PATH "/usr/bin") # or /usr/local/bin
 
 set(CMAKE_CXX_COMPILER "${COMPILER_PATH}/mpic++")
 
@@ -119,4 +119,6 @@ add_executable(AIR
         src/yahoo_m/FullAggregator_m.cpp
         src/yahoo_m/FullAggregator_m.hpp
         src/yahoo_m/WinJoinYSB_m.cpp
-        src/yahoo_m/WinJoinYSB_m.hpp)
+        src/yahoo_m/WinJoinYSB_m.hpp
+        )
+        
