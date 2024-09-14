@@ -42,7 +42,7 @@ class YSB_m: public Dataflow {
 
 public:
 
-	Vertex *generator, *filter, *joinClick, *joinView, *par_aggregateClick, *par_aggregateView, *full_aggregateClick, *full_aggregateView, *ratioFinder ;//,*collector;
+	Vertex *generator, *filter, *joinClick, *joinView, *par_aggregateClick, *par_aggregateView, *full_aggregateClick, *full_aggregateView, *ratioFinder ,*collector;
 
 	YSB_m(unsigned long tp);
 

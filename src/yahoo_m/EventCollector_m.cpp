@@ -1,111 +1,110 @@
-#include <iostream>
-#include <unordered_map>
+
+#include <unistd.h>
 #include "../serialization/Serialization.hpp"
 #include "EventCollector_m.hpp"
-#include <list>
+
 
 using namespace std;
 
-EventCollectorM::EventCollectorM(int tag, int rank, int worldSize) : Vertex(tag, rank, worldSize) {
-    D(cout << "EventCollectorM [" << tag << "] CREATED @ " << rank << endl;)
+EventCollectorM::EventCollectorM(int tag, int rank, int worldSize) :
+		Vertex(tag, rank, worldSize) {
+
+	// Global stats
+	sum_latency = 0;
+	sum_counts = 0;
+	num_messages = 0;
+
+	S_CHECK(if (rank == 0) {
+				datafile.open("Data/results"+to_string(rank)+".tsv");
+	})
+
+	D(cout << "EVENTCOLLECTOR [" << tag << "] CREATED @ " << rank << endl;)
 }
 
 EventCollectorM::~EventCollectorM() {
-    D(cout << "EventCollectorM [" << tag << "] DELETED @ " << rank << endl;)
+	D(cout << "EVENTCOLLECTOR [" << tag << "] DELETED @ " << rank << endl;)
 }
 
 void EventCollectorM::batchProcess() {
-    D(cout << "EventCollectorM->BATCHPROCESS [" << tag << "] @ " << rank << endl;)
+	D(cout << "EVENTCOLLECTOR->BATCHPROCESS [" << tag << "] @ " << rank << endl;)
 }
 
 void EventCollectorM::streamProcess(int channel) {
-    D(cout << "EventCollectorM->STREAMPROCESS [" << tag << "] @ " << rank
-           << " IN-CHANNEL " << channel << endl;)
 
-    if (rank == 0) {
-        Message* inMessage;
-        list<Message*>* tmpMessages = new list<Message*>();
-        Serialization sede;
-        
-        // Hashmap to store the sum of latencies and counts for each WID
-        unordered_map<long int, pair<long int, long int>> widLatencyCountMap;
 
-        EventWJ eventWJ;
-        int message_count = 0;  // Track number of messages
+	D(cout << "EVENTCOLLECTOR->STREAMPROCESS [" << tag << "] @ " << rank
+			<< " IN-CHANNEL " << channel << endl;)
 
-        while (ALIVE) {
-            pthread_mutex_lock(&listenerMutexes[channel]);
+	if (rank == 0) {
 
-            while (inMessages[channel].empty()) {
-                pthread_cond_wait(&listenerCondVars[channel], &listenerMutexes[channel]);
-            }
+		Message* inMessage;
+		list<Message*>* tmpMessages = new list<Message*>();
+		Serialization sede;
 
-            while (!inMessages[channel].empty()) {
-                inMessage = inMessages[channel].front();
-                inMessages[channel].pop_front();
-                tmpMessages->push_back(inMessage);
-            }
+		EventWJ eventWJ;
 
-            pthread_mutex_unlock(&listenerMutexes[channel]);
+		int c = 0;
+		while (ALIVE) {
 
-            while (!tmpMessages->empty()) {
-                inMessage = tmpMessages->front();
-                tmpMessages->pop_front();
+			pthread_mutex_lock(&listenerMutexes[channel]);
 
-                D(cout << "EventCollectorM->POP MESSAGE: TAG [" << tag << "] @ " << rank
-                       << " BUFFER SIZE " << inMessage->size << endl;)
+			while (inMessages[channel].empty())
+				pthread_cond_wait(&listenerCondVars[channel],
+						&listenerMutexes[channel]);
 
-                int event_count = inMessage->size / sizeof(EventWJ);
-                int i = 0;
+			while (!inMessages[channel].empty()) {
+				inMessage = inMessages[channel].front();
+				inMessages[channel].pop_front();
+				tmpMessages->push_back(inMessage);
+			}
 
-                // Reset the hashmap for each message
-                widLatencyCountMap.clear();
-                long int total_clicks_views = 0;
+			pthread_mutex_unlock(&listenerMutexes[channel]);
 
-                // First pass: accumulate latencies and counts for each WID
-                while (i < event_count) {
-                    sede.YSBdeserializeWJ(inMessage, &eventWJ, i * sizeof(EventWJ));
+			while (!tmpMessages->empty()) {
 
-                    // Accumulate latency and count for the current WID
-                    widLatencyCountMap[eventWJ.WID].first += eventWJ.latency;
-                    widLatencyCountMap[eventWJ.WID].second++;  // Increment the event count for WID
+				inMessage = tmpMessages->front();
+				tmpMessages->pop_front();
 
-                    // Accumulate clicks and views for total count
-                    total_clicks_views += eventWJ.ClickCount + eventWJ.ViewCount;
+				cout << "EVENTCOLLECTOR->POP MESSAGE: TAG [" << tag << "] @ "
+						<< rank << " CHANNEL " << channel << " BUFFER "
+						<< inMessage->size << endl;
 
-                    // Print event details
-                    cout << i << "\tWID: " << eventWJ.WID
-                         << "\tc_id: " << eventWJ.c_id
-                         << "\tClickCount: " << eventWJ.ClickCount
-                         << "\tViewCount: " << eventWJ.ViewCount
-                         << "\tClick/View Ratio: " << eventWJ.ratio
-                         << "\tLatency: " << eventWJ.latency << " ms" << endl;
+				int event_count = inMessage->size / sizeof(EventWJ);
+			cout << "EVENT_COUNT: " << event_count << endl;
 
-                    i++;
-                }
+				int i = 0, count = 0;
+				while (i < event_count) {
+					sede.YSBdeserializeWJ(inMessage, &eventWJ,
+							i * sizeof(EventWJ));
+					sum_latency += eventWJ.latency;
+					count += eventWJ.ClickCount + eventWJ.ViewCount;
+//					sede.YSBprintPC(&eventPC);
+					S_CHECK(
+										datafile
+												<< eventWJ.WID << "\t"
+												<< eventWJ.c_id << "\t"
+										    
+												<<endl;
 
-                // Second pass: calculate and print the average latency for each WID
-                for (const auto& pair : widLatencyCountMap) {
-                    long int WID = pair.first;
-                    long int total_latency = pair.second.first;
-                    long int event_count_per_WID = pair.second.second;
+									)
+					i++;
+				}
+				sum_counts += event_count; // count of distinct c_id's processed
+				num_messages++;
 
-                    // Calculate the average latency for the WID
-                    double avg_latency_per_WID = (event_count_per_WID > 0) ? static_cast<double>(total_latency) / event_count_per_WID : 0;
-                    cout << "WID: " << WID << " - Average Latency: " << avg_latency_per_WID << " ms over " << event_count_per_WID << " events." << endl;
-                }
+				cout << "\n  #" << num_messages <<"\tWID"<<eventWJ.WID <<" COUNT: " << count
+						<< "\tAVG_LATENCY: " << (sum_latency / sum_counts)
+						<< "\tN=" << event_count << "\n" << endl;
 
-                // Print message-level summary
-                message_count++;
-                cout << "Message #" << message_count
-                     << " - Total Clicks+Views: " << total_clicks_views << endl;
 
-                delete inMessage;
-            }
+				delete inMessage; // delete message from incoming queue
+				c++;
+			}
 
-            tmpMessages->clear();
-        }
+			tmpMessages->clear();
+		}
 
-        delete tmpMessages;
-    }
+		delete tmpMessages;
+	}
 }
+
