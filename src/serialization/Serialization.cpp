@@ -304,3 +304,79 @@ void Serialization::YSBprintPC_m(EventPC_m* event) {
 	cout << "event_time: " << event->event_time << endl;
 	cout << "event_type: " << event->type << endl;
 }
+
+
+
+
+void Serialization::YSBserializeWJ(EventWJ* event, Message* message) {
+    char* b = message->buffer + message->size;
+    memcpy(b, &event->WID, sizeof(long int));           // Serialize WID
+    b += sizeof(long int);
+    memcpy(b, &event->c_id, sizeof(long int));          // Serialize c_id
+    b += sizeof(long int);
+    memcpy(b, &event->ClickCount, sizeof(long int));    // Serialize ClickCount
+    b += sizeof(long int);
+    memcpy(b, &event->ViewCount, sizeof(long int));     // Serialize ViewCount
+    b += sizeof(long int);
+    memcpy(b, &event->ratio, sizeof(double));           // Serialize ratio
+    b += sizeof(double);
+    memcpy(b, &event->latency, sizeof(long int));       // Serialize latency
+    b += sizeof(long int);
+    message->size += sizeof(EventWJ);                   // Update message size
+}
+
+void Serialization::YSBdeserializeWJ(Message* message, EventWJ* event, int offset) {
+    char* b = message->buffer + offset;
+    memcpy(&event->WID, b, sizeof(long int));           // Deserialize WID
+    b += sizeof(long int);
+    memcpy(&event->c_id, b, sizeof(long int));          // Deserialize c_id
+    b += sizeof(long int);
+    memcpy(&event->ClickCount, b, sizeof(long int));    // Deserialize ClickCount
+    b += sizeof(long int);
+    memcpy(&event->ViewCount, b, sizeof(long int));     // Deserialize ViewCount
+    b += sizeof(long int);
+    memcpy(&event->ratio, b, sizeof(double));           // Deserialize ratio
+    b += sizeof(double);
+    memcpy(&event->latency, b, sizeof(long int));       // Deserialize latency
+}
+
+/*void Serialization::YSBserializeWJ(EventWJ* event, Message* message) {
+    char* b = message->buffer + message->size;
+    memcpy(b, &event->WID, 8);            // Serialize WID
+    b += 8;
+    memcpy(b, &event->c_id, 8);           // Serialize c_id
+    b += 8;
+    memcpy(b, &event->ClickCount, 8);     // Serialize ClickCount
+    b += 8;
+    memcpy(b, &event->ViewCount, 8);      // Serialize ViewCount
+    b += 8;
+    memcpy(b, &event->ratio, 8);          // Serialize ratio (double type)
+    b += 8;
+    memcpy(b, &event->latency, 8);        // Serialize latency
+    message->size += sizeof(EventWJ);     // Update message size
+}
+
+
+void Serialization::YSBdeserializeWJ(Message* message, EventWJ* event, int offset) {
+    char* b = message->buffer + offset;
+    memcpy(&event->WID, b, 8);            // Deserialize WID
+    b += 8;
+    memcpy(&event->c_id, b, 8);           // Deserialize c_id
+    b += 8;
+    memcpy(&event->ClickCount, b, 8);     // Deserialize ClickCount
+    b += 8;
+    memcpy(&event->ViewCount, b, 8);      // Deserialize ViewCount
+    b += 8;
+    memcpy(&event->ratio, b, 8);          // Deserialize ratio
+    b += 8;
+    memcpy(&event->latency, b, 8);        // Deserialize latency
+}*/
+
+void Serialization::YSBprintWJ(EventWJ* event) {
+    cout << "WID: " << event->WID
+         << "\tc_id: " << event->c_id
+         << "\tClickCount: " << event->ClickCount
+         << "\tViewCount: " << event->ViewCount
+         << "\tClick/View Ratio: " << event->ratio
+         << "\tLatency: " << event->latency << endl;
+}

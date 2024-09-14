@@ -1,4 +1,4 @@
-#cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.15)
 project(AIR)
 
 set(CMAKE_CXX_STANDARD 14)
@@ -120,5 +120,7 @@ add_executable(AIR
         src/yahoo_m/FullAggregator_m.hpp
         src/yahoo_m/WinJoinYSB_m.cpp
         src/yahoo_m/WinJoinYSB_m.hpp
+        src/yahoo_m/EventCollector_m.cpp
+        src/yahoo_m/EventCollector_m.hpp
         )
         

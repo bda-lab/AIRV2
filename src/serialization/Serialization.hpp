@@ -76,6 +76,7 @@ typedef struct IdCount {
 	long int count;
 } idcnt;
 
+#pragma pack(push, 1)
 typedef struct EventPC_m {
 	long int WID;
 	long int c_id;
@@ -83,6 +84,18 @@ typedef struct EventPC_m {
 	long int event_time;
 	int type;
 } EventPC_m;
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+typedef struct EventWJ {
+    long int WID;          // Window ID
+    long int c_id;         // Content ID
+   long int ClickCount;        // Number of clicks
+   long int ViewCount;         // Number of views
+    double ratio;          // Click/View ratio
+    long int latency;           // Latency value
+} EventWJ;
+#pragma pack(pop)
 
 class Serialization {
 
@@ -158,6 +171,15 @@ public:
 	void YSBdeserializePC_m(Message* message, EventPC_m* event, int offset);
 
 	void YSBprintPC_m(EventPC_m* event);
+
+
+   void YSBserializeWJ(EventWJ* event, Message* message);
+
+	void YSBdeserializeWJ(Message* message, EventWJ* event, int offset);
+
+	void YSBprintWJ(EventWJ* event);
+
+
 };
 
 #endif /* SERIALIZATION_SERIALIZATION_HPP_ */

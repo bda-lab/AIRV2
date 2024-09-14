@@ -1,141 +1,111 @@
-/**
- * Copyright (c) 2020 University of Luxembourg. All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification, are
- * permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this list of
- * conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list
- * of conditions and the following disclaimer in the documentation and/or other materials
- * provided with the distribution.
- * 3. Neither the name of the copyright holder nor the names of its contributors may be
- * used to endorse or promote products derived from this software without specific prior
- * written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE UNIVERSITY OF LUXEMBOURG AND CONTRIBUTORS "AS IS" AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
- * THE UNIVERSITY OF LUXEMBOURG OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
- * OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
- * TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- **/
-
-/*
- * EventCollector.cpp
- *
- *  Created on: Dec 26, 2018
- *      Author: vinu.venugopal
- */
-
-#include <unistd.h>
+#include <iostream>
+#include <unordered_map>
 #include "../serialization/Serialization.hpp"
 #include "EventCollector_m.hpp"
-
+#include <list>
 
 using namespace std;
 
-EventCollectorM::EventCollectorM(int tag, int rank, int worldSize) :
-		Vertex(tag, rank, worldSize) {
-
-	// Global stats
-	sum_latency = 0;
-	sum_counts = 0;
-	num_messages = 0;
-
-	S_CHECK(if (rank == 0) {
-				datafile.open("Data/results"+to_string(rank)+".tsv");
-	})
-
-	D(cout << "EVENTCOLLECTOR [" << tag << "] CREATED @ " << rank << endl;)
+EventCollectorM::EventCollectorM(int tag, int rank, int worldSize) : Vertex(tag, rank, worldSize) {
+    D(cout << "EventCollectorM [" << tag << "] CREATED @ " << rank << endl;)
 }
 
 EventCollectorM::~EventCollectorM() {
-	D(cout << "EVENTCOLLECTOR [" << tag << "] DELETED @ " << rank << endl;)
+    D(cout << "EventCollectorM [" << tag << "] DELETED @ " << rank << endl;)
 }
 
 void EventCollectorM::batchProcess() {
-	D(cout << "EVENTCOLLECTOR->BATCHPROCESS [" << tag << "] @ " << rank << endl;)
+    D(cout << "EventCollectorM->BATCHPROCESS [" << tag << "] @ " << rank << endl;)
 }
 
 void EventCollectorM::streamProcess(int channel) {
+    D(cout << "EventCollectorM->STREAMPROCESS [" << tag << "] @ " << rank
+           << " IN-CHANNEL " << channel << endl;)
 
+    if (rank == 0) {
+        Message* inMessage;
+        list<Message*>* tmpMessages = new list<Message*>();
+        Serialization sede;
+        
+        // Hashmap to store the sum of latencies and counts for each WID
+        unordered_map<long int, pair<long int, long int>> widLatencyCountMap;
 
-	D(cout << "EVENTCOLLECTOR->STREAMPROCESS [" << tag << "] @ " << rank
-			<< " IN-CHANNEL " << channel << endl;)
+        EventWJ eventWJ;
+        int message_count = 0;  // Track number of messages
 
-	if (rank == 0) {
+        while (ALIVE) {
+            pthread_mutex_lock(&listenerMutexes[channel]);
 
-		Message* inMessage;
-		list<Message*>* tmpMessages = new list<Message*>();
-		Serialization sede;
+            while (inMessages[channel].empty()) {
+                pthread_cond_wait(&listenerCondVars[channel], &listenerMutexes[channel]);
+            }
 
-		EventPC eventPC;
+            while (!inMessages[channel].empty()) {
+                inMessage = inMessages[channel].front();
+                inMessages[channel].pop_front();
+                tmpMessages->push_back(inMessage);
+            }
 
-		int c = 0;
-		while (ALIVE) {
+            pthread_mutex_unlock(&listenerMutexes[channel]);
 
-			pthread_mutex_lock(&listenerMutexes[channel]);
+            while (!tmpMessages->empty()) {
+                inMessage = tmpMessages->front();
+                tmpMessages->pop_front();
 
-			while (inMessages[channel].empty())
-				pthread_cond_wait(&listenerCondVars[channel],
-						&listenerMutexes[channel]);
+                D(cout << "EventCollectorM->POP MESSAGE: TAG [" << tag << "] @ " << rank
+                       << " BUFFER SIZE " << inMessage->size << endl;)
 
-			while (!inMessages[channel].empty()) {
-				inMessage = inMessages[channel].front();
-				inMessages[channel].pop_front();
-				tmpMessages->push_back(inMessage);
-			}
+                int event_count = inMessage->size / sizeof(EventWJ);
+                int i = 0;
 
-			pthread_mutex_unlock(&listenerMutexes[channel]);
+                // Reset the hashmap for each message
+                widLatencyCountMap.clear();
+                long int total_clicks_views = 0;
 
-			while (!tmpMessages->empty()) {
+                // First pass: accumulate latencies and counts for each WID
+                while (i < event_count) {
+                    sede.YSBdeserializeWJ(inMessage, &eventWJ, i * sizeof(EventWJ));
 
-				inMessage = tmpMessages->front();
-				tmpMessages->pop_front();
+                    // Accumulate latency and count for the current WID
+                    widLatencyCountMap[eventWJ.WID].first += eventWJ.latency;
+                    widLatencyCountMap[eventWJ.WID].second++;  // Increment the event count for WID
 
-				D(cout << "EVENTCOLLECTOR->POP MESSAGE: TAG [" << tag << "] @ "
-						<< rank << " CHANNEL " << channel << " BUFFER "
-						<< inMessage->size << endl;)
+                    // Accumulate clicks and views for total count
+                    total_clicks_views += eventWJ.ClickCount + eventWJ.ViewCount;
 
-				//int event_count = inMessage->size / sizeof(EventPC);
-				//cout << "EVENT_COUNT: " << event_count << endl;
+                    // Print event details
+                    cout << i << "\tWID: " << eventWJ.WID
+                         << "\tc_id: " << eventWJ.c_id
+                         << "\tClickCount: " << eventWJ.ClickCount
+                         << "\tViewCount: " << eventWJ.ViewCount
+                         << "\tClick/View Ratio: " << eventWJ.ratio
+                         << "\tLatency: " << eventWJ.latency << " ms" << endl;
 
-				int i = 0, count = 0;
-				while (i < 2) {
-					sede.YSBdeserializePC(inMessage, &eventPC,
-							i * sizeof(EventPC));
-					sum_latency += eventPC.latency;
-					count += eventPC.count;
-//					sede.YSBprintPC(&eventPC);
-					S_CHECK(
-										datafile
-												<< eventPC.WID << "\t"
-												<< eventPC.c_id << "\t"
-												<< eventPC.count
-												<<endl;
+                    i++;
+                }
 
-									)
-					i++;
-				}
-				//sum_counts += event_count; // count of distinct c_id's processed
-				num_messages++;
-//
-			//	cout << "\n  #" << num_messages << " COUNT: " << count
-				//		<< "\tAVG_LATENCY: " << (sum_latency / count) << endl;
-					//	<< "\tN=" << event_count << "\n" << endl;
+                // Second pass: calculate and print the average latency for each WID
+                for (const auto& pair : widLatencyCountMap) {
+                    long int WID = pair.first;
+                    long int total_latency = pair.second.first;
+                    long int event_count_per_WID = pair.second.second;
 
+                    // Calculate the average latency for the WID
+                    double avg_latency_per_WID = (event_count_per_WID > 0) ? static_cast<double>(total_latency) / event_count_per_WID : 0;
+                    cout << "WID: " << WID << " - Average Latency: " << avg_latency_per_WID << " ms over " << event_count_per_WID << " events." << endl;
+                }
 
-				delete inMessage; // delete message from incoming queue
-				c++;
-			}
+                // Print message-level summary
+                message_count++;
+                cout << "Message #" << message_count
+                     << " - Total Clicks+Views: " << total_clicks_views << endl;
 
-			tmpMessages->clear();
-		}
+                delete inMessage;
+            }
 
-		delete tmpMessages;
-	}
+            tmpMessages->clear();
+        }
+
+        delete tmpMessages;
+    }
 }
