@@ -25,10 +25,12 @@
  **/
 
 /*
- * EventCollector.hpp
+ * EventCollector_m.hpp
  *
- *  Created on: Dec 26, 2018
+ *  Created on: 12, Aug, 2019
  *      Author: vinu.venugopal
+
+ 
  */
 
 #ifndef COLLECTOR_EVENTCOLLECTOR_HPP_
