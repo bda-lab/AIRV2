@@ -63,6 +63,7 @@ using namespace std;
 #include "../usecases/YSB_m.hpp"
 #include "../usecases/YSB_Serialized.hpp"
 #include "../usecases/YSB_MultiQuery.hpp"
+#include "../usecases/YSB_MultiQuery_Serialized.hpp"
 using namespace std;
 
 int main(int argc, char *argv[])
@@ -81,7 +82,7 @@ int main(int argc, char *argv[])
             tp = atol(argv[2]); // Store the second argument in tp
         }
 
-        if (s.compare("YSBMQ") == 0 && argc > 3)
+        if ((s.compare("YSBMQ") == 0 && argc > 3)||(s.compare("YSBMQS") == 0 && argc > 3))
         {
             queries = atoi(argv[3]); // If YSBMQ, store the third argument in queries
         }
@@ -101,6 +102,10 @@ int main(int argc, char *argv[])
         else if (s.compare("YSBMQ") == 0)
         {
             dataflow = new YSB_MultiQuery(tp, queries); // Pass tp and queries to YSB_MultiQuery
+        }
+		else if (s.compare("YSBMQS") == 0)
+        {
+            dataflow = new YSB_MultiQuery_Serialized(tp, queries); // Pass tp and queries to YSB_MultiQuery
         }
     }
     else
