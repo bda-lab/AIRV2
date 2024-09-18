@@ -3,7 +3,7 @@ project(AIR)
 
 set(CMAKE_CXX_STANDARD 14)
 
-set(COMPILER_PATH "/usr/local/bin") # or /usr/local/bin
+set(COMPILER_PATH "/usr/bin") # or /usr/local/bin
 
 set(CMAKE_CXX_COMPILER "${COMPILER_PATH}/mpic++")
 

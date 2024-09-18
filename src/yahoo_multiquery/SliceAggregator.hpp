@@ -46,10 +46,10 @@ typedef unordered_map<long int, count_maxeventtime> InnerHMap;
 typedef unordered_map<long int, unordered_map<long int, count_maxeventtime>> OuterHMap;
 typedef unordered_map<long int, std::pair<int, int>> WIDtoWrapperUnitHMap;
 
-class SliceAggregator: public Vertex {
+class SliceAggregator : public Vertex
+{
 
 public:
-
 	OuterHMap WIDtoIHM;
 	pthread_mutex_t WIDtoIHM_mutex;
 
@@ -63,7 +63,6 @@ public:
 	void batchProcess();
 
 	void streamProcess(int channel);
-
 };
 
 #endif /* OPERATOR_SliceAggregator_HPP_ */

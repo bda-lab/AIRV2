@@ -49,7 +49,7 @@ public:
 	long int sum_counts;
 	int num_messages;
 	long int min_window_id;
-
+	bool is_min_window_id_initialized;
 	SerializedCollector(int tag, int rank, int worldSize);
 
 	~SerializedCollector();

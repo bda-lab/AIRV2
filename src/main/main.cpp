@@ -54,84 +54,90 @@
 #include "../usecases/YSB_MultiQuery.hpp"
 using namespace std;
 
+#include <cstdlib>
+#include <ctime>
+#include <iostream>
+
+#include "../usecases/StreamingTest.hpp"
+#include "../usecases/YSB.hpp"
+#include "../usecases/YSB_m.hpp"
+#include "../usecases/YSB_Serialized.hpp"
+#include "../usecases/YSB_MultiQuery.hpp"
+using namespace std;
+
 int main(int argc, char *argv[])
 {
+    Dataflow *dataflow = nullptr;
+    bool batchflag = false;
+    unsigned long tp = 10000; // Default value for tp
+    int queries = 4;          // Default value for queries
 
-	Dataflow *dataflow = nullptr;
-	bool batchflag = false;
-	unsigned long tp = 10000;
-	int queries = 1;
-	if (argc > 1)
-	{
+    if (argc > 1)
+    {
+        string s(argv[1]);
 
-		if (argc == 2)
-		{
-			tp = atol(argv[2]);
-		}
-		else if (argc > 2)
-		{
-			tp = atol(argv[2]);
-			queries = atoi(argv[3]);
-		}
-		string s(argv[1]);
+        if (argc > 2)
+        {
+            tp = atol(argv[2]); // Store the second argument in tp
+        }
 
-		if (s.compare("YSB") == 0)
-		{
+        if (s.compare("YSBMQ") == 0 && argc > 3)
+        {
+            queries = atoi(argv[3]); // If YSBMQ, store the third argument in queries
+        }
 
-			dataflow = new YSB(tp);
-		}
-		else if (s.compare("YSBM") == 0)
-		{
+        if (s.compare("YSB") == 0)
+        {
+            dataflow = new YSB(tp);
+        }
+        else if (s.compare("YSBM") == 0)
+        {
+            dataflow = new YSB_m(tp);
+        }
+        else if (s.compare("YSBS") == 0)
+        {
+            dataflow = new YSB_Serialized(tp);
+        }
+        else if (s.compare("YSBMQ") == 0)
+        {
+            dataflow = new YSB_MultiQuery(tp, queries); // Pass tp and queries to YSB_MultiQuery
+        }
+    }
+    else
+    {
+        dataflow = new StreamingTest(); // Default case
+    }
 
-			dataflow = new YSB_m(tp);
-		}
-		else if (s.compare("YSBS") == 0)
-		{
-			dataflow = new YSB_Serialized(tp);
-		}
-		else if (s.compare("YSBMQ") == 0)
-		{
-			dataflow = new YSB_MultiQuery(tp, queries);
-		}
-	}
-	else
-	{
+    clock_t start, startbatch;
+    start = clock();
 
-		dataflow = new StreamingTest();
-	}
+    // Iterative batch processing (completely synchronized between input windows)
+    int i = 0;
+    if (batchflag)
+    {
+        for (i = 0; i < 30; i++)
+        { // repeat 30x
+            startbatch = clock();
 
-	clock_t start, startbatch;
-	start = clock();
+            double batchlatency = (clock() - startbatch) / (double)CLOCKS_PER_SEC * 1000; // batch latency calculation
 
-	// Iterative batch processing (completely synchronized between input windows)
-	int i = 0;
-	if (batchflag)
-	{
+            cout << "BATCH-" << i + 1 << " COMPLETED IN " << batchlatency
+                 << " MSEC (" << batchlatency / 60000 << " MIN) @ "
+                 << dataflow->rank << endl;
+        }
+    }
+    else
+    {
+        // Stream processing (asynchronous across input windows)
+        dataflow->streamProcess();
+    }
 
-		for (i = 0; i < 30; i++)
-		{ // repeat 30x
-			startbatch = clock();
+    cout << "DATAFLOW COMPLETED IN "
+         << ((clock() - start) / (double)CLOCKS_PER_SEC * 1000) << " MSEC ("
+         << ((clock() - start) / (double)CLOCKS_PER_SEC * 1000) / 60000
+         << " MIN) @ " << dataflow->rank << endl;
 
-			double batchlatency = (clock() - startbatch) / (double)CLOCKS_PER_SEC * 1000; // batch latency calculation
+    delete dataflow;
 
-			cout << "BATCH-" << i + 1 << " COMPLETED IN " << batchlatency
-				 << " MSEC (" << batchlatency / 60000 << " MIN) @ "
-				 << dataflow->rank << endl;
-		}
-	}
-	else
-	{
-
-		// Stream processing (asynchronous across input windows)
-		dataflow->streamProcess();
-	}
-
-	cout << "DATAFLOW COMPLETED IN "
-		 << ((clock() - start) / (double)CLOCKS_PER_SEC * 1000) << " MSEC ("
-		 << ((clock() - start) / (double)CLOCKS_PER_SEC * 1000) / 60000
-		 << " MIN) @ " << dataflow->rank << endl;
-
-	delete dataflow;
-
-	return 0;
+    return 0;
 }

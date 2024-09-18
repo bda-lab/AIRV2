@@ -48,7 +48,8 @@ SerializedCollector::SerializedCollector(int tag, int rank, int worldSize) : Ver
 	sum_latency = 0;
 	sum_counts = 0;
 	num_messages = 0;
-	min_window_id = 0;
+	// min_window_id = 0;
+	is_min_window_id_initialized=false;
 	S_CHECK(if (rank == 0) {
 		datafile.open("Data/results" + to_string(rank) + ".tsv");
 	})
@@ -124,7 +125,12 @@ void SerializedCollector::streamProcess(int channel)
 				sum_counts += event_count; // count of distinct c_id's processed
 				num_messages++;
 				widToSumCount[eventPC.WID] = event_count;
-
+				if (!is_min_window_id_initialized)
+                {
+                    min_window_id = eventPC.WID;
+                    is_min_window_id_initialized = true;
+					cout<<"Min Window ID = "<<min_window_id<<endl;
+                }
 				delete inMessage; // delete message from incoming queue
 				c++;
 			}

@@ -234,7 +234,7 @@ void EventGenerator::getNextMessage(EventDG *event, WrapperUnit *wrapper_unit,
 	while (i < events_per_msg)
 	{
 		// Use the same ad_id for all events for debugging ysbmq
-		// memcpy(event->ad_id, ad_ids[myrandom(0, 999)].c_str(), 36);
+		memcpy(event->ad_id, ad_ids[myrandom(0, 999)].c_str(), 36);
 		event->event_time = time_now + (999 - i % 1000); // uniformly distribute event times among current message window, upper first
 		// event->event_time = (long int) (MPI_Wtime() * 1000);
 

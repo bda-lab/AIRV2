@@ -53,6 +53,8 @@ YSB_MultiQuery::YSB_MultiQuery(unsigned long throughput, int queries) : Dataflow
     filter = new EventFilter(2, rank, worldSize);
     join = new SHJoin(3, rank, worldSize);
     par_aggregate = new PartialAggregator(4, rank, worldSize);
+    slice_aggregator = new SliceAggregator(5, rank, worldSize,queries);
+    query_aggregator = new QueryAggregator(6, rank, worldSize,queries);
     slice_aggregator = new SliceAggregator(5, rank, worldSize, queries);
     query_aggregator = new QueryAggregator(6, rank, worldSize,queries);
     collector = new QueryCollector(7, rank, worldSize);
