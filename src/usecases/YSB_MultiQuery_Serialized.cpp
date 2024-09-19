@@ -55,8 +55,6 @@ YSB_MultiQuery_Serialized::YSB_MultiQuery_Serialized(unsigned long throughput, i
     par_aggregate = new PartialAggregator(4, rank, worldSize);
     slice_aggregator = new SliceAggregator(5, rank, worldSize, queries);
     query_aggregator = new QueryAggregator(6, rank, worldSize, queries);
-    slice_aggregator = new SliceAggregator(5, rank, worldSize, queries);
-    query_aggregator = new QueryAggregator(6, rank, worldSize, queries);
     collector = new MultiQuerySerializedCollector(7, rank, worldSize);
 
     addLink(generator, filter);

@@ -25,55 +25,55 @@
  **/
 
 /*
- * YSB_MultiQuery.cpp
+ * SlidingWin.cpp
  *
  *  Created on: July 23, 2018
  *      Author: martin.theobald, vinu.venugopal
  */
 
-#include "YSB_MultiQuery.hpp"
+#include "SlidingWin.hpp"
 
 #include "../yahoo/EventFilter.hpp"
 #include "../yahoo/EventGenerator.hpp"
 #include "../yahoo_multiquery/SliceAggregator.hpp"
-#include "../yahoo_multiquery/QueryAggregator.hpp"
+#include "../sliding_window/SlidingWinAgg.hpp"
 #include "../yahoo/PartialAggregator.hpp"
 #include "../yahoo/SHJoin.hpp"
-#include "../yahoo_multiquery/QueryCollector.hpp"
+#include "../sliding_window/SlidingCollector.hpp"
 using namespace std;
 /**
  * We calculate the latency as the difference between the result generation timestamp for a given `time_window` and `campaign_id`
  * pair and the event timestamp of the latest record generated that belongs to that bucket.
  **/
 
-YSB_MultiQuery::YSB_MultiQuery(unsigned long throughput, int queries) : Dataflow()
+SlidingWin::SlidingWin(unsigned long throughput) : Dataflow()
 {
 
     generator = new EventGenerator(1, rank, worldSize, throughput);
     filter = new EventFilter(2, rank, worldSize);
     join = new SHJoin(3, rank, worldSize);
     par_aggregate = new PartialAggregator(4, rank, worldSize);
-    slice_aggregator = new SliceAggregator(5, rank, worldSize,queries);
-    query_aggregator = new QueryAggregator(6, rank, worldSize,queries);
-    collector = new QueryCollector(7, rank, worldSize);
+    slice_aggregator = new SliceAggregator(5, rank, worldSize, worldSize);
+    sliding_window_aggregator = new SlidingWinAgg(6, rank, worldSize);
+    collector = new SlidingCollector(7, rank, worldSize);
 
     addLink(generator, filter);
     addLink(filter, join);
     addLink(join, par_aggregate);
     addLink(par_aggregate, slice_aggregator);
-    addLink(slice_aggregator, query_aggregator);
-    addLink(query_aggregator, collector);
+    addLink(slice_aggregator, sliding_window_aggregator);
+    addLink(sliding_window_aggregator, collector);
 
     generator->initialize();
     filter->initialize();
     join->initialize();
     par_aggregate->initialize();
     slice_aggregator->initialize();
-    query_aggregator->initialize();
+    sliding_window_aggregator->initialize();
     collector->initialize();
 }
 
-YSB_MultiQuery::~YSB_MultiQuery()
+SlidingWin::~SlidingWin()
 {
 
     delete generator;
@@ -81,6 +81,6 @@ YSB_MultiQuery::~YSB_MultiQuery()
     delete join;
     delete par_aggregate;
     delete slice_aggregator;
-    delete query_aggregator;
+    delete sliding_window_aggregator;
     delete collector;
 }
