@@ -99,6 +99,16 @@ typedef struct EventPC_m
 	int type;
 } EventPC_m;
 
+typedef struct EventWJ
+{
+	long int WID;
+	long int c_id;
+	long int ClickCount;
+	long int ViewCount;
+	double ratio;
+	long int latency;
+} EventWJ;
+
 class Serialization
 {
 
@@ -178,6 +188,11 @@ public:
 	void YSBdeserializePC_m(Message *message, EventPC_m *event, int offset);
 
 	void YSBprintPC_m(EventPC_m *event);
+	void YSBserializeWJ(EventWJ *event, Message *message);
+
+	void YSBdeserializeWJ(Message *message, EventWJ *event, int offset);
+
+	void YSBprintWJ(EventWJ *event);
 };
 
 #endif /* SERIALIZATION_SERIALIZATION_HPP_ */

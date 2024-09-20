@@ -100,6 +100,8 @@ add_executable(AIR
         src/usecases/YSB_MultiQuery_Serialized.hpp
         src/usecases/SlidingWin.cpp
         src/usecases/SlidingWin.hpp
+        src/usecases/SlidingWin_Serialized.cpp
+        src/usecases/SlidingWin_Serialized.hpp
         src/winagg/EventSharder.cpp
         src/winagg/EventSharder.hpp
         src/winagg/WindowedCounter.cpp
@@ -120,6 +122,8 @@ add_executable(AIR
         src/sliding_window/SlidingWinAgg.hpp
         src/sliding_window/SlidingCollector.cpp
         src/sliding_window/SlidingCollector.hpp
+        src/sliding_window_serialized/Sliding_Serialized.cpp
+        src/sliding_window_serialized/Sliding_Serialized.hpp
         src/yahoo_serialized/SerializedCollector.cpp
         src/yahoo_serialized/SerializedCollector.hpp
         src/yahoo_multiquery/SliceAggregator.cpp
@@ -135,4 +139,6 @@ add_executable(AIR
         src/yahoo_m/FullAggregator_m.cpp
         src/yahoo_m/FullAggregator_m.hpp
         src/yahoo_m/WinJoinYSB_m.cpp
-        src/yahoo_m/WinJoinYSB_m.hpp)
+        src/yahoo_m/WinJoinYSB_m.hpp
+        src/yahoo_m/EventCollector_m.cpp
+        src/yahoo_m/EventCollector_m.hpp)

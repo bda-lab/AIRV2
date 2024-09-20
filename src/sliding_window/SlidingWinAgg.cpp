@@ -111,8 +111,10 @@ void SlidingWinAgg::streamProcess(int channel)
                 // WID = eventSlice.slice_id / (rank + 1);
                 // wid = (floor((f - rank) / worldsize) * worldsize) + rank
                 WID = (floor((eventSlice.slice_id - rank) / worldSize) * worldSize) + rank;
+                // WID = (floor((eventSlice.slice_id - rank) / groupSize) * groupSize) + rank;
+
                 std::pair<long int, int> wid_rank_pair = std::make_pair(WID, rank);
-                // cout << "Event Slice Id " << eventSlice.slice_id << " At rank" << rank << "temp " << floor((eventSlice.slice_id - rank) / worldSize) << " belongs to WID: " << WID << endl;
+                // cout << "Event Slice Id " << eventSlice.slice_id << " At rank" << rank << " temp " << floor((eventSlice.slice_id - rank) / worldSize) << " belongs to WID: " << WID << endl;
                 // **Update**: Track slices properly
                 slicePresenceMap[wid_rank_pair].insert(eventSlice.slice_id);
                 if (slicePresenceMap[wid_rank_pair].size() == worldSize)
@@ -165,7 +167,7 @@ void SlidingWinAgg::streamProcess(int channel)
                         eventPC.WID = WID;
                         eventPC.c_id = CIDtoCountAndMaxEventTime_it->first;
                         eventPC.count = CIDtoCountAndMaxEventTime_it->second.first;
-                        eventPC.latency = CIDtoCountAndMaxEventTime_it->second.second;
+                        eventPC.latency = eventSlice.latency;
 
                         sede.YSBserializePC(&eventPC, outMessage);
                     }

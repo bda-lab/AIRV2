@@ -212,7 +212,46 @@ void Serialization::YSBprintJ(EventJ *event)
 	cout << "event_time: " << event->event_time << "\tc_id: " << event->c_id
 		 << endl;
 }
+void Serialization::YSBserializeWJ(EventWJ* event, Message* message) {
+    char* b = message->buffer + message->size;
+    memcpy(b, &event->WID, sizeof(long int));           // Serialize WID
+    b += sizeof(long int);
+    memcpy(b, &event->c_id, sizeof(long int));          // Serialize c_id
+    b += sizeof(long int);
+    memcpy(b, &event->ClickCount, sizeof(long int));    // Serialize ClickCount
+    b += sizeof(long int);
+    memcpy(b, &event->ViewCount, sizeof(long int));     // Serialize ViewCount
+    b += sizeof(long int);
+    memcpy(b, &event->ratio, sizeof(double));           // Serialize ratio
+    b += sizeof(double);
+    memcpy(b, &event->latency, sizeof(long int));       // Serialize latency
+    b += sizeof(long int);
+    message->size += sizeof(EventWJ);                   // Update message size
+}
 
+void Serialization::YSBdeserializeWJ(Message* message, EventWJ* event, int offset) {
+    char* b = message->buffer + offset;
+    memcpy(&event->WID, b, sizeof(long int));           // Deserialize WID
+    b += sizeof(long int);
+    memcpy(&event->c_id, b, sizeof(long int));          // Deserialize c_id
+    b += sizeof(long int);
+    memcpy(&event->ClickCount, b, sizeof(long int));    // Deserialize ClickCount
+    b += sizeof(long int);
+    memcpy(&event->ViewCount, b, sizeof(long int));     // Deserialize ViewCount
+    b += sizeof(long int);
+    memcpy(&event->ratio, b, sizeof(double));           // Deserialize ratio
+    b += sizeof(double);
+    memcpy(&event->latency, b, sizeof(long int));       // Deserialize latency
+}
+
+void Serialization::YSBprintWJ(EventWJ* event) {
+    cout << "WID: " << event->WID
+         << "\tc_id: " << event->c_id
+         << "\tClickCount: " << event->ClickCount
+         << "\tViewCount: " << event->ViewCount
+         << "\tClick/View Ratio: " << event->ratio
+         << "\tLatency: " << event->latency << endl;
+}
 void Serialization::YSBserializePA(EventPA *event, Message *message)
 {
 	char *b = message->buffer + message->size;

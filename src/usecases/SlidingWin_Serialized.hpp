@@ -27,26 +27,27 @@
 /*
  * YSB.hpp
  *
- *  Created on: Feb 11, 2019
+ *  Created on: Jun 18, 2018
  *      Author: vinu.venugopal
  */
 
-#ifndef USECASES_YSB_M_HPP_
-#define USECASES_YSB_M_HPP_
+#ifndef USECASES_SlidingWin_Serialized_HPP_
+#define USECASES_SlidingWin_Serialized_HPP_
 
 #include "../dataflow/Dataflow.hpp"
 
 using namespace std;
 
-class YSB_m : public Dataflow
+class SlidingWin_Serialized : public Dataflow
 {
 
 public:
-	Vertex *generator, *filter, *joinClick, *joinView, *par_aggregateClick, *par_aggregateView, *full_aggregateClick, *full_aggregateView, *ratioFinder, *collector;
+	Vertex *generator, *filter, *join, *par_aggregate, *slice_aggregator,
+		*serialized_buffer, *sliding_window_aggregator, *collector;
 
-	YSB_m(unsigned long tp);
+	SlidingWin_Serialized(unsigned long tp);
 
-	~YSB_m();
+	~SlidingWin_Serialized();
 };
 
-#endif /* USECASES_YSB_M_HPP_ */
+#endif /* USECASES_SlidingWin_Serialized_HPP_ */

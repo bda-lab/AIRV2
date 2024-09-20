@@ -25,28 +25,41 @@
  **/
 
 /*
- * YSB.hpp
+ * Sliding_Serialized.hpp
  *
- *  Created on: Feb 11, 2019
+ *  Created on: Dec 26, 2018
  *      Author: vinu.venugopal
  */
 
-#ifndef USECASES_YSB_M_HPP_
-#define USECASES_YSB_M_HPP_
+#ifndef COLLECTOR_Sliding_Serialized_HPP_
+#define COLLECTOR_Sliding_Serialized_HPP_
 
-#include "../dataflow/Dataflow.hpp"
+#include "../dataflow/Vertex.hpp"
+#include <fstream>
+#include <string>
 
 using namespace std;
 
-class YSB_m : public Dataflow
+class Sliding_Serialized : public Vertex
 {
 
 public:
-	Vertex *generator, *filter, *joinClick, *joinView, *par_aggregateClick, *par_aggregateView, *full_aggregateClick, *full_aggregateView, *ratioFinder, *collector;
+    // Global stats
+    long int sum_latency;
+    long int sum_counts;
+    int num_messages;
+    long int min_window_id;
+    bool is_min_window_id_initialized;
+    Sliding_Serialized(int tag, int rank, int worldSize);
 
-	YSB_m(unsigned long tp);
+    ~Sliding_Serialized();
 
-	~YSB_m();
+    void batchProcess();
+
+    void streamProcess(int channel);
+
+private:
+    std::ofstream datafile;
 };
 
-#endif /* USECASES_YSB_M_HPP_ */
+#endif /* COLLECTOR_Sliding_Serialized_HPP_ */

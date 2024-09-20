@@ -65,7 +65,7 @@ using namespace std;
 #include "../usecases/YSB_MultiQuery.hpp"
 #include "../usecases/YSB_MultiQuery_Serialized.hpp"
 #include "../usecases/SlidingWin.hpp"
-
+#include "../usecases/SlidingWin_Serialized.hpp"
 using namespace std;
 
 int main(int argc, char *argv[])
@@ -112,6 +112,10 @@ int main(int argc, char *argv[])
         else if (s.compare("Sliding") == 0)
         {
             dataflow = new SlidingWin(tp);
+        }
+        else if (s.compare("SlidingS") == 0)
+        {
+            dataflow = new SlidingWin_Serialized(tp);
         }
     }
     else

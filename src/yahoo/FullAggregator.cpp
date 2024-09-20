@@ -228,10 +228,9 @@ void FullAggregator::streamProcess(int channel)
 
 						eventPC.WID = WID;
 						eventPC.c_id = CIDtoCountAndMaxEventTime_it->first;
-						eventPC.count =
-							CIDtoCountAndMaxEventTime_it->second.first;
-						eventPC.latency = CIDtoCountAndMaxEventTime_it->second.second;
-						// eventPC.latency = eventPA.max_event_time;
+						eventPC.count =CIDtoCountAndMaxEventTime_it->second.first;
+						// eventPC.latency = CIDtoCountAndMaxEventTime_it->second.second;
+						eventPC.latency = eventPA.max_event_time;
 						// cout << "  " << j << "\tWID: " << eventPC.WID
 						// 	 << "\tc_id: " << eventPC.c_id << "\tcount: "
 						// 	 << eventPC.count << "\tmax_event_time: "

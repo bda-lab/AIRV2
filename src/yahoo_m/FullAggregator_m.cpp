@@ -134,7 +134,7 @@ void FullAggregatorM::streamProcess(int channel)
 				//				sede.printWrapper(&wrapper_unit);
 
 				WID = wrapper_unit.window_start_time / AGG_WIND_SPAN;
-		
+
 				if (wrapper_unit.completeness_tag_denominator == 1)
 				{
 					completed_windows.push_back(WID);
@@ -272,10 +272,10 @@ void FullAggregatorM::streamProcess(int channel)
 
 						eventPC.WID = WID;
 						eventPC.c_id = CIDtoCountAndMaxEventTime_it->first;
-						eventPC.count =
-							CIDtoCountAndMaxEventTime_it->second.first;
+						eventPC.count = CIDtoCountAndMaxEventTime_it->second.first;
 						//						eventPC.latency = (time_now - eventPA.max_event_time);
 						eventPC.event_time = eventPA.max_event_time;
+						// eventPC.event_time = CIDtoCountAndMaxEventTime_it->second.second;
 						eventPC.type = this->event_type;
 
 						//						sede.YSBprintPC_m(&eventPC);
@@ -303,16 +303,16 @@ void FullAggregatorM::streamProcess(int channel)
 					//					sending simply to the first channel -- sharding is not performed here,
 					//					since one message would contain multiple window aggregation results!
 					int idx = 0 + WID % worldSize; // "0" indicates the first succeeding operator
-					cout << "sending out data by rank-" << rank << " operator to channel-" << idx << endl;
+					// cout << "sending out data by rank-" << rank << " operator to channel-" << idx << endl;
 					// Normal mode: synchronize on outgoing message channel & send message
 					pthread_mutex_lock(&senderMutexes[idx]);
 					outMessages[idx].push_back(outMessage);
 
-					cout << "FULLAGGREGATOR->PUSHBACK MESSAGE [" << tag << "] #"
-						 << c << " @ " << rank << " IN-CHANNEL " << channel
-						 << " OUT-CHANNEL " << idx << " SIZE "
-						 << outMessage->size << " CAP "
-						 << outMessage->capacity << endl;
+					// cout << "FULLAGGREGATOR->PUSHBACK MESSAGE [" << tag << "] #"
+					// 	 << c << " @ " << rank << " IN-CHANNEL " << channel
+					// 	 << " OUT-CHANNEL " << idx << " SIZE "
+					// 	 << outMessage->size << " CAP "
+					// 	 << outMessage->capacity << endl;
 
 					pthread_cond_signal(&senderCondVars[idx]);
 					pthread_mutex_unlock(&senderMutexes[idx]);
