@@ -102,6 +102,8 @@ add_executable(AIR
         src/usecases/SlidingWin.hpp
         src/usecases/SlidingWin_Serialized.cpp
         src/usecases/SlidingWin_Serialized.hpp
+        src/usecases/YSB_m_Serialized.cpp
+        src/usecases/YSB_m_Serialized.hpp
         src/winagg/EventSharder.cpp
         src/winagg/EventSharder.hpp
         src/winagg/WindowedCounter.cpp
@@ -141,4 +143,6 @@ add_executable(AIR
         src/yahoo_m/WinJoinYSB_m.cpp
         src/yahoo_m/WinJoinYSB_m.hpp
         src/yahoo_m/EventCollector_m.cpp
-        src/yahoo_m/EventCollector_m.hpp)
+        src/yahoo_m/EventCollector_m.hpp
+        src/yahoo_m_Serialized/SerializedCollectorM.cpp
+        src/yahoo_m_Serialized/SerializedCollectorM.hpp)
