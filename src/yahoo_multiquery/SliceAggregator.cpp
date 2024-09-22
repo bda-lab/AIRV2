@@ -180,8 +180,8 @@ void SliceAggregator::streamProcess(int channel)
                         eventSlice.slice_id = WID;
                         eventSlice.c_id = CIDtoCountAndMaxEventTime_it->first;
                         eventSlice.count = CIDtoCountAndMaxEventTime_it->second.first;
-                        // eventSlice.latency = CIDtoCountAndMaxEventTime_it->second.second;
-                        eventSlice.latency = eventPA.max_event_time;
+                        eventSlice.latency = CIDtoCountAndMaxEventTime_it->second.second;
+                        // eventSlice.latency = eventPA.max_event_time;
                         for (int i = 0; i < queries; i++)
                         {
                             sede.YSBserializeSlice(&eventSlice, outMessage[i]);

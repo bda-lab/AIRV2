@@ -274,8 +274,8 @@ void FullAggregatorM::streamProcess(int channel)
 						eventPC.c_id = CIDtoCountAndMaxEventTime_it->first;
 						eventPC.count = CIDtoCountAndMaxEventTime_it->second.first;
 						//						eventPC.latency = (time_now - eventPA.max_event_time);
-						eventPC.event_time = eventPA.max_event_time;
-						// eventPC.event_time = CIDtoCountAndMaxEventTime_it->second.second;
+						// eventPC.event_time = eventPA.max_event_time;
+						eventPC.event_time = CIDtoCountAndMaxEventTime_it->second.second;
 						eventPC.type = this->event_type;
 
 						//						sede.YSBprintPC_m(&eventPC);

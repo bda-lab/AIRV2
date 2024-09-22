@@ -167,7 +167,7 @@ void SlidingWinAgg::streamProcess(int channel)
                         eventPC.WID = WID;
                         eventPC.c_id = CIDtoCountAndMaxEventTime_it->first;
                         eventPC.count = CIDtoCountAndMaxEventTime_it->second.first;
-                        eventPC.latency = eventSlice.latency;
+                        eventPC.latency = CIDtoCountAndMaxEventTime_it->second.second;
 
                         sede.YSBserializePC(&eventPC, outMessage);
                     }
