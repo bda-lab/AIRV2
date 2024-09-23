@@ -32,7 +32,8 @@
  */
 
 #include "FullAggregator.hpp"
-
+#include <cstdlib> // For rand()
+#include <ctime>   // For time()
 #include <mpi.h>
 #include <cstring>
 #include <iostream>
@@ -228,7 +229,7 @@ void FullAggregator::streamProcess(int channel)
 
 						eventPC.WID = WID;
 						eventPC.c_id = CIDtoCountAndMaxEventTime_it->first;
-						eventPC.count =CIDtoCountAndMaxEventTime_it->second.first;
+						eventPC.count = CIDtoCountAndMaxEventTime_it->second.first;
 						eventPC.latency = CIDtoCountAndMaxEventTime_it->second.second;
 						// eventPC.latency = eventPA.max_event_time;
 						// cout << "  " << j << "\tWID: " << eventPC.WID
@@ -248,12 +249,12 @@ void FullAggregator::streamProcess(int channel)
 			}
 
 			pthread_mutex_unlock(&WIDtoIHM_mutex); //====================================================================
-			// To simulate the delay in the network
-			//  if (rank == 0)
-			//  {
-			//  	// cout<<"Rank 0 is sleeping for 2 seconds\n";
-			//  	sleep(2);
-			//  }
+												   // To simulate the delay in the network
+			// if (rank == 0)
+			// {
+			// 	// cout<<"Rank 0 is sleeping for 2 seconds\n";
+			// 	sleep(1);
+			// }
 			//  Finally send message to a single collector on rank 0
 			int n = 0;
 			for (vector<Vertex *>::iterator v = next.begin(); v != next.end();
@@ -297,3 +298,197 @@ void FullAggregator::streamProcess(int channel)
 
 	delete tmpMessages;
 }
+// void FullAggregator::streamProcess(int channel)
+// {
+// 	D(cout << "FULLAGGREGATOR->STREAMPROCESS [" << tag << "] @ " << rank
+// 		   << " IN-CHANNEL " << channel << endl;);
+
+// 	// Initialize random seed once
+// 	srand(time(NULL));
+
+// 	Message *inMessage, *outMessage;
+// 	list<Message *> *tmpMessages = new list<Message *>();
+// 	Serialization sede;
+
+// 	WIDtoWrapperUnitHMap::iterator WIDtoWrapperUnit_it;
+// 	OuterHMap::iterator WIDtoIHM_it;
+// 	InnerHMap::iterator CIDtoCountAndMaxEventTime_it;
+
+// 	WrapperUnit wrapper_unit;
+// 	EventPA eventPA;
+// 	EventPC eventPC;
+
+// 	int c = 0;
+// 	while (ALIVE)
+// 	{
+// 		int flag = 0;
+// 		pthread_mutex_lock(&listenerMutexes[channel]);
+
+// 		while (inMessages[channel].empty())
+// 			pthread_cond_wait(&listenerCondVars[channel], &listenerMutexes[channel]);
+
+// 		while (!inMessages[channel].empty())
+// 		{
+// 			inMessage = inMessages[channel].front();
+// 			inMessages[channel].pop_front();
+// 			tmpMessages->push_back(inMessage);
+// 		}
+
+// 		pthread_mutex_unlock(&listenerMutexes[channel]);
+
+// 		while (!tmpMessages->empty())
+// 		{
+// 			inMessage = tmpMessages->front();
+// 			tmpMessages->pop_front();
+
+// 			D(cout << "FULLAGGREGATOR->POP MESSAGE: TAG [" << tag << "] @ "
+// 				   << rank << " CHANNEL " << channel << " BUFFER "
+// 				   << inMessage->size << endl);
+
+// 			long int WID;
+// 			list<long int> completed_windows;
+
+// 			sede.unwrap(inMessage);
+// 			if (inMessage->wrapper_length > 0)
+// 			{
+// 				sede.unwrapFirstWU(inMessage, &wrapper_unit);
+// 				WID = wrapper_unit.window_start_time / AGG_WIND_SPAN;
+
+// 				if (wrapper_unit.completeness_tag_denominator == 1)
+// 				{
+// 					completed_windows.push_back(WID);
+// 				}
+// 				else
+// 				{
+// 					pthread_mutex_lock(&WIDtoWrapperUnit_mutex);
+
+// 					if ((WIDtoWrapperUnit_it = WIDtoWrapperUnit.find(WID)) != WIDtoWrapperUnit.end())
+// 					{
+// 						WIDtoWrapperUnit_it->second.first =
+// 							WIDtoWrapperUnit_it->second.first + wrapper_unit.completeness_tag_numerator;
+
+// 						if (WIDtoWrapperUnit_it->second.first / WIDtoWrapperUnit_it->second.second)
+// 						{
+// 							completed_windows.push_back(WID);
+// 							WIDtoWrapperUnit.erase(WID);
+// 						}
+// 					}
+// 					else
+// 					{
+// 						WIDtoWrapperUnit.emplace(WID, make_pair(
+// 														  wrapper_unit.completeness_tag_numerator,
+// 														  wrapper_unit.completeness_tag_denominator));
+// 					}
+
+// 					pthread_mutex_unlock(&WIDtoWrapperUnit_mutex);
+// 				}
+// 			}
+
+// 			int offset = sizeof(int) + (inMessage->wrapper_length * sizeof(WrapperUnit));
+
+// 			outMessage = new Message(sizeof(EventPC) * 100);
+
+// 			int event_count = (inMessage->size - offset) / sizeof(EventPA);
+
+// 			pthread_mutex_lock(&WIDtoIHM_mutex);
+
+// 			int i = 0, j = 0, k = 0;
+// 			while (i < event_count)
+// 			{
+// 				sede.YSBdeserializePA(inMessage, &eventPA, offset + (i * sizeof(EventPA)));
+// 				WID = eventPA.max_event_time / AGG_WIND_SPAN;
+
+// 				if ((WIDtoIHM_it = WIDtoIHM.find(WID)) != WIDtoIHM.end())
+// 				{
+// 					if ((CIDtoCountAndMaxEventTime_it =
+// 							 WIDtoIHM_it->second.find(eventPA.c_id)) != WIDtoIHM_it->second.end())
+// 					{
+// 						CIDtoCountAndMaxEventTime_it->second.first =
+// 							CIDtoCountAndMaxEventTime_it->second.first + eventPA.count;
+
+// 						if (CIDtoCountAndMaxEventTime_it->second.second < eventPA.max_event_time)
+// 						{
+// 							CIDtoCountAndMaxEventTime_it->second.second = eventPA.max_event_time;
+// 						}
+// 					}
+// 					else
+// 					{
+// 						WIDtoIHM_it->second.emplace(eventPA.c_id, std::make_pair(eventPA.count, eventPA.max_event_time));
+// 						k++;
+// 					}
+// 				}
+// 				else
+// 				{
+// 					InnerHMap new_CIDtoCountAndMaxEventTime(100);
+// 					new_CIDtoCountAndMaxEventTime.emplace(eventPA.c_id, std::make_pair(eventPA.count, eventPA.max_event_time));
+// 					WIDtoIHM.emplace(WID, new_CIDtoCountAndMaxEventTime);
+// 					j++;
+// 				}
+
+// 				i++;
+// 			}
+
+// 			while (!completed_windows.empty())
+// 			{
+// 				WID = completed_windows.front();
+// 				completed_windows.pop_front();
+
+// 				WIDtoIHM_it = WIDtoIHM.find(WID);
+// 				if (WIDtoIHM_it != WIDtoIHM.end())
+// 				{
+// 					j = 0;
+// 					for (CIDtoCountAndMaxEventTime_it = WIDtoIHM_it->second.begin();
+// 						 CIDtoCountAndMaxEventTime_it != WIDtoIHM_it->second.end();
+// 						 CIDtoCountAndMaxEventTime_it++)
+// 					{
+// 						eventPC.WID = WID;
+// 						eventPC.c_id = CIDtoCountAndMaxEventTime_it->first;
+// 						eventPC.count = CIDtoCountAndMaxEventTime_it->second.first;
+// 						eventPC.latency = CIDtoCountAndMaxEventTime_it->second.second;
+
+// 						sede.YSBserializePC(&eventPC, outMessage);
+// 						j++;
+// 					}
+
+// 					WIDtoIHM_it->second.clear();
+// 					WIDtoIHM.erase(WID);
+// 				}
+// 			}
+
+// 			pthread_mutex_unlock(&WIDtoIHM_mutex);
+
+// 			// Introduce random delay for out-of-order events
+// 			int delay_ms = rand() % 1000; // Random delay between 0 to 1000 ms
+// 			// cout << "Rank =" << rank << " is sleeping for " << delay_ms << " ms\n";
+// 			usleep(delay_ms * 1000); // Convert milliseconds to microseconds
+
+// 			// Send message to rank 0 only
+// 			for (vector<Vertex *>::iterator v = next.begin(); v != next.end(); ++v)
+// 			{
+// 				if (outMessage->size > 0)
+// 				{
+// 					int idx = 0; // Send to rank 0
+// 					pthread_mutex_lock(&senderMutexes[idx]);
+// 					outMessages[idx].push_back(outMessage);
+// 					D(cout << "FULLAGGREGATOR->PUSHBACK MESSAGE [" << tag << "] #" << c << " @ " << rank << " IN-CHANNEL " << channel
+// 						   << " OUT-CHANNEL " << idx << " SIZE " << outMessage->size << " CAP " << outMessage->capacity << endl;);
+// 					pthread_cond_signal(&senderCondVars[idx]);
+// 					pthread_mutex_unlock(&senderMutexes[idx]);
+// 				}
+// 				else
+// 				{
+// 					delete outMessage;
+// 				}
+
+// 				break; // Only one successor node allowed
+// 			}
+
+// 			delete inMessage;
+// 			c++;
+// 		}
+
+// 		tmpMessages->clear();
+// 	}
+
+// 	delete tmpMessages;
+// }
