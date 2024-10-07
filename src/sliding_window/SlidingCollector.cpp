@@ -70,79 +70,82 @@ void SlidingCollector::streamProcess(int channel)
 
     D(cout << "SlidingCollector->STREAMPROCESS [" << tag << "] @ " << rank
            << " IN-CHANNEL " << channel << endl;)
-
-    Message *inMessage;
-    list<Message *> *tmpMessages = new list<Message *>();
-    Serialization sede;
-
-    EventPC eventPC;
-
-    int c = 0;
-    while (ALIVE)
+    if (rank == 0)
     {
 
-        pthread_mutex_lock(&listenerMutexes[channel]);
+        Message *inMessage;
+        list<Message *> *tmpMessages = new list<Message *>();
+        Serialization sede;
 
-        while (inMessages[channel].empty())
-            pthread_cond_wait(&listenerCondVars[channel],
-                              &listenerMutexes[channel]);
+        EventPC eventPC;
 
-        while (!inMessages[channel].empty())
-        {
-            inMessage = inMessages[channel].front();
-            inMessages[channel].pop_front();
-            tmpMessages->push_back(inMessage);
-        }
-
-        pthread_mutex_unlock(&listenerMutexes[channel]);
-
-        while (!tmpMessages->empty())
+        int c = 0;
+        while (ALIVE)
         {
 
-            inMessage = tmpMessages->front();
-            tmpMessages->pop_front();
+            pthread_mutex_lock(&listenerMutexes[channel]);
 
-            D(cout << "SlidingCollector->POP MESSAGE: TAG [" << tag << "] @ "
-                   << rank << " CHANNEL " << channel << " BUFFER "
-                   << inMessage->size << endl;)
+            while (inMessages[channel].empty())
+                pthread_cond_wait(&listenerCondVars[channel],
+                                  &listenerMutexes[channel]);
 
-            int event_count = inMessage->size / sizeof(EventPC);
-
-            int i = 0, count = 0;
-            while (i < event_count)
+            while (!inMessages[channel].empty())
             {
-                sede.YSBdeserializePC(inMessage, &eventPC,
-                                      i * sizeof(EventPC));
-                long int time_now = (long int)(MPI_Wtime() * 1000.0);
-
-                sum_latency += (time_now - eventPC.latency);
-                count += eventPC.count;
-                //					sede.YSBprintPC(&eventPC);
-                S_CHECK(
-                    datafile
-                        << eventPC.WID << "\t"
-                        << eventPC.c_id << "\t"
-                        << eventPC.count
-                        << endl;
-
-                )
-                cout << "WID: " << eventPC.WID << "\tc_id: " << eventPC.c_id << "\tcount: " << eventPC.count << "\tmax_event_time: " << eventPC.latency << endl;
-
-                i++;
+                inMessage = inMessages[channel].front();
+                inMessages[channel].pop_front();
+                tmpMessages->push_back(inMessage);
             }
-            sum_counts += event_count; // count of distinct c_id's processed
-            num_messages++;
 
-            cout << "\n  #" << num_messages << " COUNT: " << count
-                 << "\tAVG_LATENCY: " << ((double)sum_latency / sum_counts) / 1000.0 << "\tGlobal Sum Counts: " << sum_counts << "\tGlobal Sum Latency: " << sum_latency << "\tN=" << event_count << "\n"
-                 << endl;
+            pthread_mutex_unlock(&listenerMutexes[channel]);
 
-            delete inMessage; // delete message from incoming queue
-            c++;
+            while (!tmpMessages->empty())
+            {
+
+                inMessage = tmpMessages->front();
+                tmpMessages->pop_front();
+
+                D(cout << "SlidingCollector->POP MESSAGE: TAG [" << tag << "] @ "
+                       << rank << " CHANNEL " << channel << " BUFFER "
+                       << inMessage->size << endl;)
+
+                int event_count = inMessage->size / sizeof(EventPC);
+
+                int i = 0, count = 0;
+                while (i < event_count)
+                {
+                    sede.YSBdeserializePC(inMessage, &eventPC,
+                                          i * sizeof(EventPC));
+                    long int time_now = (long int)(MPI_Wtime() * 1000.0);
+
+                    sum_latency += (time_now - eventPC.latency);
+                    count += eventPC.count;
+                    //					sede.YSBprintPC(&eventPC);
+                    S_CHECK(
+                        datafile
+                            << eventPC.WID << "\t"
+                            << eventPC.c_id << "\t"
+                            << eventPC.count
+                            << endl;
+
+                    )
+                    cout << "WID: " << eventPC.WID << "\tc_id: " << eventPC.c_id << "\tcount: " << eventPC.count << "\tmax_event_time: " << eventPC.latency << endl;
+
+                    i++;
+                }
+                sum_counts += event_count; // count of distinct c_id's processed
+                num_messages++;
+
+                cout << "\n  #" << num_messages << " COUNT: " << count
+                     << "\tAVG_LATENCY: " << ((double)sum_latency / sum_counts) / 1000.0 << "\tGlobal Sum Counts: " << sum_counts << "\tGlobal Sum Latency: " << sum_latency << "\tN=" << event_count << "\n"
+                     << endl;
+
+                delete inMessage; // delete message from incoming queue
+                c++;
+            }
+
+            tmpMessages->clear();
         }
 
-        tmpMessages->clear();
+        delete tmpMessages;
     }
-
-    delete tmpMessages;
 }

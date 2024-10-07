@@ -73,7 +73,7 @@ void Sliding_Serialized::streamProcess(int channel)
     D(cout << "EVENTCOLLECTOR->STREAMPROCESS [" << tag << "] @ " << rank
            << " IN-CHANNEL " << channel << endl;)
 
-    // if (rank == 0)
+    if (rank == 0)
     {
         Message *inMessage;
         list<Message *> *tmpMessages = new list<Message *>();
@@ -130,14 +130,14 @@ void Sliding_Serialized::streamProcess(int channel)
                 {
                     min_window_id = eventPC.WID;
                     is_min_window_id_initialized = true;
-                    cout << "Min Window ID = " << min_window_id << endl;
+                    // cout << "Min Window ID = " << min_window_id << endl;
                 }
                 delete inMessage; // delete message from incoming queue
                 c++;
             }
             int iter = 0, total_count = 0;
             // Process events for min_window_id
-            cout << "Fetching for " << min_window_id << " at rank" << rank << endl;
+            // cout << "Fetching for " << min_window_id << " at rank" << rank << endl;
             if (widToCids.count(min_window_id) > 0)
             {
                 long int time_now = (long int)(MPI_Wtime() * 1000.0);
@@ -157,7 +157,7 @@ void Sliding_Serialized::streamProcess(int channel)
                     widToCids.erase(min_window_id);
 
                     min_window_id++;
-                    cout << "New wid " << min_window_id << endl;
+                    // cout << "New wid " << min_window_id << endl;
                 }
             }
             tmpMessages->clear();

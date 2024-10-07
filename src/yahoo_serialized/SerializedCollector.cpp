@@ -129,16 +129,17 @@ void SerializedCollector::streamProcess(int channel)
 				{
 					min_window_id = eventPC.WID;
 					is_min_window_id_initialized = true;
-					cout << "Min Window ID = " << min_window_id << endl;
+					// cout << "Min Window ID = " << min_window_id << endl;
 				}
 				delete inMessage; // delete message from incoming queue
 				c++;
 			}
-			int iter = 0, total_count = 0;
+			int total_count = 0;
 			// Process events for min_window_id
 			if (widToCids.count(min_window_id) > 0)
 			{
 				long int time_now = (long int)(MPI_Wtime() * 1000.0);
+				int i = 0;
 				while (widToCids.count(min_window_id) > 0)
 				{
 					for (long int cid : widToCids[min_window_id])
@@ -147,12 +148,17 @@ void SerializedCollector::streamProcess(int channel)
 						EventPC eventPC = widCidToEventPC[key];
 						sum_latency += (time_now - eventPC.latency);
 						total_count += eventPC.count;
-						// cout << "WID: " << eventPC.WID << "\tc_id: " << eventPC.c_id << "\tcount: " << eventPC.count << "\tmax_event_time: " << eventPC.latency << endl;
+						cout << "WID: " << eventPC.WID << "\tc_id: " << eventPC.c_id << "\tcount: " << eventPC.count << "\tmax_event_time: " << eventPC.latency << endl;
 						widCidToEventPC.erase(key);
+						// if (i % 10 == 0)
+						// {
+						// 	cout << "Processing Time " << time_now << "\tEvent Time " << eventPC.latency << endl;
+						// }
+						i++;
 					}
-					// cout << "\n  #" << num_messages << " COUNT: " << total_count
-					// 	 << "\tAVG_LATENCY: " << ((double)sum_latency / sum_counts) / 1000.0 << "\tGlobal Sum Counts: " << sum_counts << "\tGlobal Sum Latency: " << sum_latency << "\tN=" << widToSumCount[eventPC.WID] << "\n";
-					cout << ((double)sum_latency / sum_counts) / 1000.0 << endl;
+					cout << "\n  #" << num_messages << " COUNT: " << total_count
+						 << "\tAVG_LATENCY: " << ((double)sum_latency / sum_counts) / 1000.0 << "\tGlobal Sum Counts: " << sum_counts << "\tGlobal Sum Latency: " << sum_latency << "\tN=" << widToSumCount[eventPC.WID] << "\n";
+					// cout << ((double)sum_latency / sum_counts) / 1000.0 << endl;
 					widToCids.erase(min_window_id);
 					min_window_id++;
 				}

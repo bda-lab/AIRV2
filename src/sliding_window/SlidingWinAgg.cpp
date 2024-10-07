@@ -110,6 +110,11 @@ void SlidingWinAgg::streamProcess(int channel)
                 sede.YSBdeserializeSlice(inMessage, &eventSlice, i * sizeof(EventSlice));
                 // WID = eventSlice.slice_id / (rank + 1);
                 // wid = (floor((f - rank) / worldsize) * worldsize) + rank
+                if (eventSlice.slice_id - rank < 0)
+                {
+                    // cout << "Event Slice Id " << eventSlice.slice_id << " At rank" << rank << " IS BEING SKIPPED " << endl;
+                    continue;
+                }
                 WID = (floor((eventSlice.slice_id - rank) / worldSize) * worldSize) + rank;
                 // WID = (floor((eventSlice.slice_id - rank) / groupSize) * groupSize) + rank;
 
@@ -119,7 +124,7 @@ void SlidingWinAgg::streamProcess(int channel)
                 slicePresenceMap[wid_rank_pair].insert(eventSlice.slice_id);
                 if (slicePresenceMap[wid_rank_pair].size() == worldSize)
                 {
-                    cout << "Wid " << WID << " rank " << rank << " is completed" << endl;
+                    // cout << "Wid " << WID << " rank " << rank << " is completed" << endl;
                     completed_windows.push_back(WID);
                     slicePresenceMap.erase(wid_rank_pair); // Remove WID from tracking map once complete
                 }
@@ -183,7 +188,7 @@ void SlidingWinAgg::streamProcess(int channel)
             {
                 if (outMessage && outMessage->size > 0)
                 {
-                    int idx = rank; // Channel equal to rank number
+                    int idx = 0; // Channel equal to rank number
                     pthread_mutex_lock(&senderMutexes[idx]);
                     outMessages[idx].push_back(outMessage);
 
