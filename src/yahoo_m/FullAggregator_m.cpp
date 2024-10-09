@@ -50,33 +50,30 @@
 using namespace std;
 
 FullAggregatorM::FullAggregatorM(int tag, int rank, int worldSize,
-								 int event_type_arg) : Vertex(tag, rank, worldSize)
-{
+		int event_type_arg) :
+		Vertex(tag, rank, worldSize) {
 	this->event_type = event_type_arg;
 	D(cout << "FULLAGGREGATOR [" << tag << "] CREATED @ " << rank << endl;);
 	pthread_mutex_init(&WIDtoIHM_mutex, NULL);
 	pthread_mutex_init(&WIDtoWrapperUnit_mutex, NULL);
 }
 
-FullAggregatorM::~FullAggregatorM()
-{
+FullAggregatorM::~FullAggregatorM() {
 	D(cout << "FULLAGGREGATOR [" << tag << "] DELETED @ " << rank << endl;);
 }
 
-void FullAggregatorM::batchProcess()
-{
+void FullAggregatorM::batchProcess() {
 	D(cout << "FULLAGGREGATOR->BATCHPROCESS [" << tag << "] @ " << rank << endl;);
 }
 
-void FullAggregatorM::streamProcess(int channel)
-{
+void FullAggregatorM::streamProcess(int channel) {
 
 	D(cout << "FULLAGGREGATOR->STREAMPROCESS [" << tag << "] @ " << rank
-		   << " IN-CHANNEL " << channel << endl;);
+			<< " IN-CHANNEL " << channel << endl;);
 
-	Message *inMessage, *outMessage;
-	//	Message** outMessagesToWindowIDs = new Message*[worldSize];
-	list<Message *> *tmpMessages = new list<Message *>();
+	Message* inMessage, *outMessage;
+//	Message** outMessagesToWindowIDs = new Message*[worldSize];
+	list<Message*>* tmpMessages = new list<Message*>();
 	Serialization sede;
 
 	WIDtoWrapperUnitHMap::iterator WIDtoWrapperUnit_it;
@@ -88,21 +85,19 @@ void FullAggregatorM::streamProcess(int channel)
 	EventPC_m eventPC;
 
 	int c = 0;
-	while (ALIVE)
-	{
-		//		sleep(10);
+	while (ALIVE) {
+//		sleep(10);
 		int flag = 0;
 		pthread_mutex_lock(&listenerMutexes[channel]);
 
 		while (inMessages[channel].empty())
 			pthread_cond_wait(&listenerCondVars[channel],
-							  &listenerMutexes[channel]);
-		//		if (inMessages[channel].size() > 1){flag =1;
-		//			cout << tag << " CHANNEL-" << channel << " BUFFER SIZE:"
-		//					<< inMessages[channel].size() << endl;}
+					&listenerMutexes[channel]);
+//		if (inMessages[channel].size() > 1){flag =1;
+//			cout << tag << " CHANNEL-" << channel << " BUFFER SIZE:"
+//					<< inMessages[channel].size() << endl;}
 
-		while (!inMessages[channel].empty())
-		{
+		while (!inMessages[channel].empty()) {
 			inMessage = inMessages[channel].front();
 			inMessages[channel].pop_front();
 			tmpMessages->push_back(inMessage);
@@ -110,124 +105,121 @@ void FullAggregatorM::streamProcess(int channel)
 
 		pthread_mutex_unlock(&listenerMutexes[channel]);
 
-		//		if(flag==1)
-		//		cout<<"CHANNEL-"<<channel<<" BUFFER SIZE:"<<tmpMessages->size()<<endl;
+//		if(flag==1)
+//		cout<<"CHANNEL-"<<channel<<" BUFFER SIZE:"<<tmpMessages->size()<<endl;
 
-		while (!tmpMessages->empty())
-		{
+		while (!tmpMessages->empty()) {
 
 			inMessage = tmpMessages->front();
 			tmpMessages->pop_front();
 
 			D(cout << "FULLAGGREGATOR->POP MESSAGE: TAG [" << tag << "] @ "
-				   << rank << " CHANNEL " << channel << " BUFFER "
-				   << inMessage->size << endl);
+					<< rank << " CHANNEL " << channel << " BUFFER "
+					<< inMessage->size << endl);
 
 			long int WID;
 			list<long int> completed_windows;
 
 			sede.unwrap(inMessage);
-			if (inMessage->wrapper_length > 0)
-			{
+			if (inMessage->wrapper_length > 0) {
 
 				sede.unwrapFirstWU(inMessage, &wrapper_unit);
-				//				sede.printWrapper(&wrapper_unit);
+//				sede.printWrapper(&wrapper_unit);
 
 				WID = wrapper_unit.window_start_time / AGG_WIND_SPAN;
 
-				if (wrapper_unit.completeness_tag_denominator == 1)
-				{
+				//cout << "Processing WID: " << WID << " @ Rank: " << rank << endl;
+
+				if (wrapper_unit.completeness_tag_denominator == 1) {
 					completed_windows.push_back(WID);
-				}
-				else
-				{
+					cout << "WID " << WID << " is complete (denominator == 1)." << endl;
+				} else {
 					pthread_mutex_lock(&WIDtoWrapperUnit_mutex); //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-					if ((WIDtoWrapperUnit_it = WIDtoWrapperUnit.find(WID)) != WIDtoWrapperUnit.end())
-					{
+					if ((WIDtoWrapperUnit_it = WIDtoWrapperUnit.find(WID))
+							!= WIDtoWrapperUnit.end()) {
 
 						WIDtoWrapperUnit_it->second.first =
-							WIDtoWrapperUnit_it->second.first + wrapper_unit.completeness_tag_numerator;
+								WIDtoWrapperUnit_it->second.first
+										+ wrapper_unit.completeness_tag_numerator;
 
-						// cout << "____AGGREGATE WRAPPER: " << WID << " NUM="
+						//cout << "____AGGREGATE WRAPPER: " << WID << " NUM="
 						//		<< WIDtoWrapperUnit_it->second.first << " DEN="
 						//		<< WIDtoWrapperUnit_it->second.second << endl;
 
-						if (WIDtoWrapperUnit_it->second.first / WIDtoWrapperUnit_it->second.second)
-						{
+						if (WIDtoWrapperUnit_it->second.first
+								/ WIDtoWrapperUnit_it->second.second) {
 							completed_windows.push_back(WID);
 							WIDtoWrapperUnit.erase(WID);
-							// cout << "____WID COMPLETE: " << WID << endl;
+							//cout << "____WID COMPLETE: " << WID << endl;
 						}
-					}
-					else
-					{
+
+					} else {
 
 						WIDtoWrapperUnit.emplace(WID,
-												 make_pair(
-													 wrapper_unit.completeness_tag_numerator,
-													 wrapper_unit.completeness_tag_denominator));
+								make_pair(
+										wrapper_unit.completeness_tag_numerator,
+										wrapper_unit.completeness_tag_denominator));
+
 					}
 
-					pthread_mutex_unlock(&WIDtoWrapperUnit_mutex); //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+					pthread_mutex_unlock(&WIDtoWrapperUnit_mutex);//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 				}
 			}
 
-			int offset = sizeof(int) + (inMessage->wrapper_length * sizeof(WrapperUnit));
+			int offset = sizeof(int)
+					+ (inMessage->wrapper_length * sizeof(WrapperUnit));
 
-			int wrappers_per_msg = 1;
+			int wrappers_per_msg =1;
 
-			outMessage = new Message(sizeof(EventPC_m) * 100, wrappers_per_msg); // create new message with max. required capacity and just one wrappering-unit
+			outMessage = new Message(sizeof(EventPC_m)*100, wrappers_per_msg); // create new message with max. required capacity and just one wrappering-unit
 
 			int event_count = (inMessage->size - offset) / sizeof(EventPA);
 
 			memcpy(outMessage->buffer, &wrappers_per_msg, sizeof(int));
 
-			// cout << "EVENT_COUNT: " << event_count << endl;
+			//cout << "EVENT_COUNT: " << event_count << endl;
 
 			pthread_mutex_lock(&WIDtoIHM_mutex); //===========================================================================
 
 			int i = 0, j = 0, k = 0;
-			while (i < event_count)
-			{
+			while (i < event_count) {
 
 				sede.YSBdeserializePA(inMessage, &eventPA,
-									  offset + (i * sizeof(EventPA)));
+						offset + (i * sizeof(EventPA)));
 
 				WID = eventPA.max_event_time / AGG_WIND_SPAN;
 
-				if ((WIDtoIHM_it = WIDtoIHM.find(WID)) != WIDtoIHM.end())
-				{
+				if ((WIDtoIHM_it = WIDtoIHM.find(WID)) != WIDtoIHM.end()) {
 
 					if ((CIDtoCountAndMaxEventTime_it =
-							 WIDtoIHM_it->second.find(eventPA.c_id)) != WIDtoIHM_it->second.end())
-					{
+							WIDtoIHM_it->second.find(eventPA.c_id))
+							!= WIDtoIHM_it->second.end()) {
 
 						CIDtoCountAndMaxEventTime_it->second.first =
-							CIDtoCountAndMaxEventTime_it->second.first + eventPA.count;
+								CIDtoCountAndMaxEventTime_it->second.first
+										+ eventPA.count;
 
-						if (CIDtoCountAndMaxEventTime_it->second.second < eventPA.max_event_time)
-						{ // new max. event time!
+						if (CIDtoCountAndMaxEventTime_it->second.second
+								< eventPA.max_event_time) { // new max. event time!
 							CIDtoCountAndMaxEventTime_it->second.second =
-								eventPA.max_event_time;
+									eventPA.max_event_time;
 						}
-					}
-					else
-					{ // new entry in inner hashmap!
+
+					} else { // new entry in inner hashmap!
 
 						WIDtoIHM_it->second.emplace(eventPA.c_id,
-													std::make_pair(eventPA.count,
-																   eventPA.max_event_time));
+								std::make_pair(eventPA.count,
+										eventPA.max_event_time));
 						k++;
 					}
-				}
-				else
-				{ // new entry in outer hashmap!
+
+				} else { // new entry in outer hashmap!
 
 					InnerHMap new_CIDtoCountAndMaxEventTime(100);
 					new_CIDtoCountAndMaxEventTime.emplace(eventPA.c_id,
-														  std::make_pair(eventPA.count,
-																		 eventPA.max_event_time));
+							std::make_pair(eventPA.count,
+									eventPA.max_event_time));
 					WIDtoIHM.emplace(WID, new_CIDtoCountAndMaxEventTime);
 
 					j++;
@@ -236,21 +228,20 @@ void FullAggregatorM::streamProcess(int channel)
 				i++;
 			}
 
-			//			long int time_now = (long int) (MPI_Wtime() * 1000.0);
-			// cout << "\nFULLAGGR TIME_NOW:  " << time_now << endl;
-			// printf("FULLAGGR MPI_Wtime: %lf\n", (MPI_Wtime() * 1000.0));
+//			long int time_now = (long int) (MPI_Wtime() * 1000.0);
+			//cout << "\nFULLAGGR TIME_NOW:  " << time_now << endl;
+			//printf("FULLAGGR MPI_Wtime: %lf\n", (MPI_Wtime() * 1000.0));
+
 
 			/* some window information would go missing if the more than one window results are available
 			 * since outMessage buffer is reserved only for 100 c_ids of a window*/
-			while (!completed_windows.empty())
-			{
-				//				cout<<"---------------------------------------list size: "<<completed_windows.size()<<endl;
+			while (!completed_windows.empty()) {
+//				cout<<"---------------------------------------list size: "<<completed_windows.size()<<endl;
 				WID = completed_windows.front();
 				completed_windows.pop_front();
 
 				WIDtoIHM_it = WIDtoIHM.find(WID);
-				if (WIDtoIHM_it != WIDtoIHM.end())
-				{
+				if (WIDtoIHM_it != WIDtoIHM.end()) {
 
 					j = 0;
 
@@ -259,26 +250,26 @@ void FullAggregatorM::streamProcess(int channel)
 					wrapper_unit.completeness_tag_denominator = 2;
 					wrapper_unit.window_start_time = WID;
 					memcpy(outMessage->buffer + sizeof(int), &wrapper_unit, sizeof(WrapperUnit));
-					outMessage->size += sizeof(int) + outMessage->wrapper_length * sizeof(WrapperUnit);
+					outMessage->size += sizeof(int)+ outMessage->wrapper_length	* sizeof(WrapperUnit);
 					/*Setting flow-wrapping information ends*/
 
 					/*for each finished window serilaize all the events
 					 * (corresponding to 100 c_ids) to outmessage!*/
 					for (CIDtoCountAndMaxEventTime_it =
-							 WIDtoIHM_it->second.begin();
-						 CIDtoCountAndMaxEventTime_it != WIDtoIHM_it->second.end();
-						 CIDtoCountAndMaxEventTime_it++)
-					{
+							WIDtoIHM_it->second.begin();
+							CIDtoCountAndMaxEventTime_it
+									!= WIDtoIHM_it->second.end();
+							CIDtoCountAndMaxEventTime_it++) {
 
 						eventPC.WID = WID;
 						eventPC.c_id = CIDtoCountAndMaxEventTime_it->first;
-						eventPC.count = CIDtoCountAndMaxEventTime_it->second.first;
-						//						eventPC.latency = (time_now - eventPA.max_event_time);
-						// eventPC.event_time = eventPA.max_event_time;
-						eventPC.event_time = CIDtoCountAndMaxEventTime_it->second.second;
+						eventPC.count =
+								CIDtoCountAndMaxEventTime_it->second.first;
+//						eventPC.latency = (time_now - eventPA.max_event_time);
+						eventPC.event_time = eventPA.max_event_time;
 						eventPC.type = this->event_type;
 
-						//						sede.YSBprintPC_m(&eventPC);
+//						sede.YSBprintPC_m(&eventPC);
 
 						sede.YSBserializePC_m(&eventPC, outMessage);
 
@@ -286,7 +277,7 @@ void FullAggregatorM::streamProcess(int channel)
 					}
 
 					WIDtoIHM_it->second.clear(); // clear inner map
-					WIDtoIHM.erase(WID);		 // remove from outer map
+					WIDtoIHM.erase(WID); // remove from outer map
 				}
 			}
 
@@ -294,31 +285,30 @@ void FullAggregatorM::streamProcess(int channel)
 
 			// Finally send message to a single collector on rank 0
 			int n = 0;
-			for (vector<Vertex *>::iterator v = next.begin(); v != next.end();
-				 ++v)
-			{
+			for (vector<Vertex*>::iterator v = next.begin(); v != next.end();
+					++v) {
 
-				if (outMessage->size > 0)
-				{
-					//					sending simply to the first channel -- sharding is not performed here,
-					//					since one message would contain multiple window aggregation results!
+				if (outMessage->size > 0) {
+//					sending simply to the first channel -- sharding is not performed here,
+//					since one message would contain multiple window aggregation results!
 					int idx = 0 + WID % worldSize; // "0" indicates the first succeeding operator
-					// cout << "sending out data by rank-" << rank << " operator to channel-" << idx << endl;
+					//cout << "Sending out data for WID: " << WID << " by rank-"
+                      // << rank << " operator to channel-" << idx << endl;
+                   //  cout<<"sending out data by rank-"<<rank<<" operator to channel-"<<idx<<endl;
 					// Normal mode: synchronize on outgoing message channel & send message
 					pthread_mutex_lock(&senderMutexes[idx]);
 					outMessages[idx].push_back(outMessage);
 
-					// cout << "FULLAGGREGATOR->PUSHBACK MESSAGE [" << tag << "] #"
-					// 	 << c << " @ " << rank << " IN-CHANNEL " << channel
-					// 	 << " OUT-CHANNEL " << idx << " SIZE "
-					// 	 << outMessage->size << " CAP "
-					// 	 << outMessage->capacity << endl;
+					D(cout << "FULLAGGREGATOR->PUSHBACK MESSAGE [" << tag << "] #"
+							<< c << " @ " << rank << " IN-CHANNEL " << channel
+							<< " OUT-CHANNEL " << idx << " SIZE "
+							<< outMessage->size << " CAP "
+							<< outMessage->capacity << endl;)
 
 					pthread_cond_signal(&senderCondVars[idx]);
 					pthread_mutex_unlock(&senderMutexes[idx]);
-				}
-				else
-				{
+
+				} else {
 
 					delete outMessage;
 				}

@@ -1,5 +1,5 @@
-#ifndef OPERATOR_WINJOINYSBM_HPP_
-#define OPERATOR_WINJOINYSBM_HPP_
+#ifndef OPERATOR_WINJOINSLICEM_HPP_
+#define OPERATOR_WINJOINSLICEM_HPP_
 
 #include <unordered_map>
 #include <utility>
@@ -16,7 +16,7 @@ typedef unordered_map<long int, std::pair<int, int>> WIDtoWrapperUnitHMap;  // W
 // Typedef for storing event times
 typedef std::pair<long int, long int> EventTimePair;  // (clickEventTime, viewEventTime)
 
-class WinJoinYSBM : public Vertex {
+class WinJoinSliceM : public Vertex {
 public:
     OuterHMapM WIDtoCIDtoCounts;  // Hashmap for WID -> c_id -> click/view counts
     WIDtoWrapperUnitHMap WIDtoWrapperUnit;  // Hashmap for window completeness
@@ -29,8 +29,8 @@ public:
     pthread_mutex_t WIDtoWrapperUnit_mutex;  // Mutex for window completeness hashmap
 
     // Constructor and Destructor
-    WinJoinYSBM(int tag, int rank, int worldSize);
-    ~WinJoinYSBM();
+    WinJoinSliceM(int tag, int rank, int worldSize);
+    ~WinJoinSliceM();
 
     // Core methods for batch and stream processing
     void batchProcess();
