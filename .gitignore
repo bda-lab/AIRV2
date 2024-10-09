@@ -7,4 +7,3 @@ Release/
 .DS_Store
 /build/
 .vscode/
-CMakeLists.txt

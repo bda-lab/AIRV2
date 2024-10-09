@@ -96,14 +96,6 @@ add_executable(AIR
         src/usecases/YSB_Serialized.hpp
         src/usecases/YSB_MultiQuery.cpp
         src/usecases/YSB_MultiQuery.hpp
-        src/usecases/YSB_MultiQuery_Serialized.cpp
-        src/usecases/YSB_MultiQuery_Serialized.hpp
-        src/usecases/SlidingWin.cpp
-        src/usecases/SlidingWin.hpp
-        src/usecases/SlidingWin_Serialized.cpp
-        src/usecases/SlidingWin_Serialized.hpp
-        src/usecases/YSB_m_Serialized.cpp
-        src/usecases/YSB_m_Serialized.hpp
         src/winagg/EventSharder.cpp
         src/winagg/EventSharder.hpp
         src/winagg/WindowedCounter.cpp
@@ -120,12 +112,6 @@ add_executable(AIR
         src/yahoo/PartialAggregator.hpp
         src/yahoo/SHJoin.cpp
         src/yahoo/SHJoin.hpp
-        src/sliding_window/SlidingWinAgg.cpp
-        src/sliding_window/SlidingWinAgg.hpp
-        src/sliding_window/SlidingCollector.cpp
-        src/sliding_window/SlidingCollector.hpp
-        src/sliding_window_serialized/Sliding_Serialized.cpp
-        src/sliding_window_serialized/Sliding_Serialized.hpp
         src/yahoo_serialized/SerializedCollector.cpp
         src/yahoo_serialized/SerializedCollector.hpp
         src/yahoo_multiquery/SliceAggregator.cpp
@@ -134,8 +120,6 @@ add_executable(AIR
         src/yahoo_multiquery/QueryAggregator.hpp
         src/yahoo_multiquery/QueryCollector.cpp
         src/yahoo_multiquery/QueryCollector.hpp
-        src/yahoo_multiquery_serialized/MultiQuerySerializedCollector.cpp
-        src/yahoo_multiquery_serialized/MultiQuerySerializedCollector.hpp
         src/yahoo_m/EventFilter_m.cpp
         src/yahoo_m/EventFilter_m.hpp
         src/yahoo_m/FullAggregator_m.cpp
@@ -144,5 +128,11 @@ add_executable(AIR
         src/yahoo_m/WinJoinYSB_m.hpp
         src/yahoo_m/EventCollector_m.cpp
         src/yahoo_m/EventCollector_m.hpp
-        src/yahoo_m_Serialized/SerializedCollectorM.cpp
-        src/yahoo_m_Serialized/SerializedCollectorM.hpp)
+        src/usecases/YSBM_MultiQuery.hpp
+        src/usecases/YSBM_MultiQuery.cpp
+        src/yahoo_m/WinJoinSlice_m.hpp
+        src/yahoo_m/WinJoinSlice_m.cpp
+        src/yahoo_m/QueryAggregator_m.hpp
+        src/yahoo_m/QueryAggregator_m.cpp
+        src/yahoo_m/QueryCollector_m.hpp
+        src/yahoo_m/QueryCollector_m.cpp)
