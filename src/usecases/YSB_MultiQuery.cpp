@@ -55,14 +55,14 @@ YSB_MultiQuery::YSB_MultiQuery(unsigned long throughput, int queries) : Dataflow
     par_aggregate = new PartialAggregator(4, rank, worldSize);
     slice_aggregator = new SliceAggregator(5, rank, worldSize,queries);
     query_aggregator = new QueryAggregator(6, rank, worldSize,queries);
-    collector = new QueryCollector(7, rank, worldSize);
+    //collector = new QueryCollector(7, rank, worldSize);
 
     addLink(generator, filter);
     addLink(filter, join);
     addLink(join, par_aggregate);
     addLink(par_aggregate, slice_aggregator);
     addLink(slice_aggregator, query_aggregator);
-    addLink(query_aggregator, collector);
+    //addLink(query_aggregator, collector);
 
     generator->initialize();
     filter->initialize();
@@ -70,7 +70,7 @@ YSB_MultiQuery::YSB_MultiQuery(unsigned long throughput, int queries) : Dataflow
     par_aggregate->initialize();
     slice_aggregator->initialize();
     query_aggregator->initialize();
-    collector->initialize();
+    //collector->initialize();
 }
 
 YSB_MultiQuery::~YSB_MultiQuery()
@@ -82,5 +82,5 @@ YSB_MultiQuery::~YSB_MultiQuery()
     delete par_aggregate;
     delete slice_aggregator;
     delete query_aggregator;
-    delete collector;
+    //delete collector;
 }

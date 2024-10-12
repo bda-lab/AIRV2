@@ -145,4 +145,12 @@ add_executable(AIR
         src/yahoo_m/EventCollector_m.cpp
         src/yahoo_m/EventCollector_m.hpp
         src/yahoo_m_Serialized/SerializedCollectorM.cpp
-        src/yahoo_m_Serialized/SerializedCollectorM.hpp)
+        src/yahoo_m_Serialized/SerializedCollectorM.hpp
+        src/usecases/YSBM_MultiQuery.hpp
+        src/usecases/YSBM_MultiQuery.cpp
+        src/yahoo_m_multiquery/WinJoinSlice_m.hpp
+        src/yahoo_m_multiquery/WinJoinSlice_m.cpp
+        src/yahoo_m_multiquery/QueryAggregator_m.hpp
+        src/yahoo_m_multiquery/QueryAggregator_m.cpp
+        src/yahoo_m_multiquery/QueryCollector_m.hpp
+        src/yahoo_m_multiquery/QueryCollector_m.cpp)

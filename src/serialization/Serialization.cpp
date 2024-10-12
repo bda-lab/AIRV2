@@ -415,3 +415,90 @@ void Serialization::YSBprintPC_m(EventPC_m *event)
 	cout << "event_time: " << event->event_time << endl;
 	cout << "event_type: " << event->type << endl;
 }
+
+/*void Serialization::YSBserializeSliceM(EventSliceM *event, Message *message)
+{
+	char *b = message->buffer + message->size;
+	memcpy(b, &event->slice_id, 8);
+	b += 8;
+	memcpy(b, &event->c_id, 8);
+	b += 8;
+	memcpy(b, &event->ClickCount, sizeof(long int));    // Serialize ClickCount
+    b += sizeof(long int);
+    memcpy(b, &event->ViewCount, sizeof(long int));     // Serialize ViewCount
+    b += sizeof(long int);
+    memcpy(b, &event->ratio, sizeof(double));           // Serialize ratio
+    b += sizeof(double);
+    memcpy(b, &event->latency, sizeof(long int));       // Serialize latency
+    b += sizeof(long int);
+	message->size += sizeof(EventSliceM);
+}
+
+void Serialization::YSBdeserializeSliceM(Message *message, EventSliceM *event,
+										int offset)
+{
+	char *b = message->buffer + offset;
+	memcpy(&event->slice_id, b, 8);
+	b += 8;
+	memcpy(&event->c_id, b, 8);
+	b += 8;
+	memcpy(&event->ClickCount, b, sizeof(long int));    // Deserialize ClickCount
+    b += sizeof(long int);
+    memcpy(&event->ViewCount, b, sizeof(long int));     // Deserialize ViewCount
+    b += sizeof(long int);
+    memcpy(&event->ratio, b, sizeof(double));           // Deserialize ratio
+    b += sizeof(double);
+    memcpy(&event->latency, b, sizeof(long int));
+}
+
+void Serialization::YSBprintSliceM(EventSliceM *event)
+{
+	cout << "__________________________________________" << endl;
+	cout << "slice_id: " << event->slice_id << endl;
+	cout << "c_id: " << event->c_id << endl;
+	cout << "Click Count: " << event->ClickCount << endl;
+	cout << "View Count: " << event->ViewCount << endl;
+	cout << "Ratio: " << event->ratio << endl;
+	cout << "latency: " << event->latency << endl;
+}*/
+
+void Serialization::YSBserializeSliceM(EventSliceM* event, Message* message) {
+    char* b = message->buffer + message->size;
+    memcpy(b, &event->slice_id, sizeof(long int));           // Serialize WID
+    b += sizeof(long int);
+    memcpy(b, &event->c_id, sizeof(long int));          // Serialize c_id
+    b += sizeof(long int);
+    memcpy(b, &event->ClickCount, sizeof(long int));    // Serialize ClickCount
+    b += sizeof(long int);
+    memcpy(b, &event->ViewCount, sizeof(long int));     // Serialize ViewCount
+    b += sizeof(long int);
+    memcpy(b, &event->ratio, sizeof(double));           // Serialize ratio
+    b += sizeof(double);
+    memcpy(b, &event->latency, sizeof(long int));       // Serialize latency
+    b += sizeof(long int);
+    message->size += sizeof(EventSliceM);                   // Update message size
+}
+
+void Serialization::YSBdeserializeSliceM(Message* message, EventSliceM* event, int offset) {
+    char* b = message->buffer + offset;
+    memcpy(&event->slice_id, b, sizeof(long int));           // Deserialize WID
+    b += sizeof(long int);
+    memcpy(&event->c_id, b, sizeof(long int));          // Deserialize c_id
+    b += sizeof(long int);
+    memcpy(&event->ClickCount, b, sizeof(long int));    // Deserialize ClickCount
+    b += sizeof(long int);
+    memcpy(&event->ViewCount, b, sizeof(long int));     // Deserialize ViewCount
+    b += sizeof(long int);
+    memcpy(&event->ratio, b, sizeof(double));           // Deserialize ratio
+    b += sizeof(double);
+    memcpy(&event->latency, b, sizeof(long int));       // Deserialize latency
+}
+
+void Serialization::YSBprintSliceM(EventSliceM* event) {
+    cout << "slice_id: " << event->slice_id
+         << "\tc_id: " << event->c_id
+         << "\tClickCount: " << event->ClickCount
+         << "\tViewCount: " << event->ViewCount
+         << "\tClick/View Ratio: " << event->ratio
+         << "\tLatency: " << event->latency << endl;
+}

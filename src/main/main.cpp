@@ -52,6 +52,8 @@
 #include "../usecases/YSB_m.hpp"
 #include "../usecases/YSB_Serialized.hpp"
 #include "../usecases/YSB_MultiQuery.hpp"
+#include "../usecases/YSBM_MultiQuery.hpp"
+
 using namespace std;
 
 #include <cstdlib>
@@ -121,6 +123,10 @@ int main(int argc, char *argv[])
         else if (s.compare("SlidingS") == 0)
         {
             dataflow = new SlidingWin_Serialized(tp);
+        }
+        else if (s.compare("YSBMMQ") == 0)
+        {
+            dataflow = new YSBM_MultiQuery(tp, queries);
         }
     }
     else

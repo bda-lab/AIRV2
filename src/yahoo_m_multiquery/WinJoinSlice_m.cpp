@@ -1,40 +1,4 @@
-
-/**
- * Copyright (c) 2020 University of Luxembourg. All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification, are
- * permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this list of
- * conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list
- * of conditions and the following disclaimer in the documentation and/or other materials
- * provided with the distribution.
- * 3. Neither the name of the copyright holder nor the names of its contributors may be
- * used to endorse or promote products derived from this software without specific prior
- * written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE UNIVERSITY OF LUXEMBOURG AND CONTRIBUTORS "AS IS" AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
- * THE UNIVERSITY OF LUXEMBOURG OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
- * OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
- * TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- **/
-
-/*
- * WinJoinYSB_m.cpp
- *
- *  Created on: 12, Aug, 2019
- *      Author: vinu.venugopal
-
-
- */
-
-#include "WinJoinYSB_m.hpp"
+#include "WinJoinSlice_m.hpp"
 #include <mpi.h>
 #include <cstring>
 #include <iostream>
@@ -46,36 +10,38 @@
 
 using namespace std;
 
-WinJoinYSBM::WinJoinYSBM(int tag, int rank, int worldSize)
+WinJoinSliceM::WinJoinSliceM(int tag, int rank, int worldSize, int q)
 	: Vertex(tag, rank, worldSize)
 {
+    queries = q;
 	pthread_mutex_init(&WIDtoCIDtoCounts_mutex, NULL);
 	D(cout << "WINJOINYSBM [" << tag << "] CREATED @ " << rank << endl;);
 }
 
-WinJoinYSBM::~WinJoinYSBM()
+WinJoinSliceM::~WinJoinSliceM()
 {
 	pthread_mutex_destroy(&WIDtoCIDtoCounts_mutex);
 	D(cout << "WINJOINYSBM [" << tag << "] DELETED @ " << rank << endl;);
 }
 
-void WinJoinYSBM::batchProcess()
+void WinJoinSliceM::batchProcess()
 {
 	D(cout << "WINJOINYSBM->BATCHPROCESS [" << tag << "] @ " << rank << endl;);
 }
 
-void WinJoinYSBM::streamProcess(int channel)
+void WinJoinSliceM::streamProcess(int channel)
 {
 	D(cout << "WINJOINYSBM->STREAMPROCESS [" << tag << "] @ " << rank << " IN-CHANNEL " << channel << endl;);
 
-	Message *inMessage, *outMessage;
+	Message *inMessage;
+    Message *outMessage[queries];
 	list<Message *> *tmpMessages = new list<Message *>();
 	list<long int> completed_windows;
 	Serialization sede;
 
 	WrapperUnit wrapper_unit;
 	EventPC_m eventPC;
-	EventWJ eventWJ;
+	EventSliceM eventSlice;
 
 	int c = 0; // Counter for number of iterations
 
@@ -144,6 +110,11 @@ void WinJoinYSBM::streamProcess(int channel)
 
 				int offset = sizeof(int) + inMessage->wrapper_length * sizeof(WrapperUnit);
 				int event_count = (inMessage->size - offset) / sizeof(EventPC_m);
+                
+                for (int i = 0; i < queries; i++) {
+                    outMessage[i] = new Message(sizeof(EventSliceM) * 100); // Create new message with max. required capacity
+                    //cout << "WINJOINYSBM->Initialized outMessage for Query: " << i << " with size: " << outMessage[i]->capacity << endl;
+                }
 
 				D(cout << "WINJOINYSBM->EVENT COUNT: " << event_count << " FOR WID: " << WID << endl;);
 
@@ -204,9 +175,6 @@ void WinJoinYSBM::streamProcess(int channel)
 
 			InnerHMapM &CIDtoCounts = WIDtoCIDtoCounts[WID];
 
-			// Create a single outMessage for this WID
-			outMessage = new Message(sizeof(EventWJ) * CIDtoCounts.size()); // Create one message to store all events for this WID
-
 			// Iterate through all c_ids in the window and serialize them into the outMessage
 			for (auto &cidEntry : CIDtoCounts)
 			{
@@ -232,47 +200,52 @@ void WinJoinYSBM::streamProcess(int channel)
 				D(cout << "WINJOINYSBM->CALCULATED RATIO FOR WID: " << WID << " c_id: " << c_id << " RATIO: " << ratio << endl;);
 
 				// Prepare the EventWJ struct for the current event
-				eventWJ.WID = WID;
-				eventWJ.c_id = c_id;
-				eventWJ.ClickCount = clickCount;
-				eventWJ.ViewCount = viewCount;
-				eventWJ.ratio = ratio;
-				eventWJ.latency = maxEventTime;
+				eventSlice.slice_id = WID;
+				eventSlice.c_id = c_id;
+				eventSlice.ClickCount = clickCount;
+				eventSlice.ViewCount = viewCount;
+				eventSlice.ratio = ratio;
+				eventSlice.latency = maxEventTime;
 
-				// cout << "WID: " << eventWJ.WID << "@rank" << rank
-				// 	 << "\tc_id: " << eventWJ.c_id
-				// 	 << "\tClickCount: " << eventWJ.ClickCount
-				// 	 << "\tViewCount: " << eventWJ.ViewCount
-				// 	 << "\tClick/View Ratio: " << eventWJ.ratio
-				// 	 << "\tLatency: " << eventWJ.latency << " ms" << endl;
-				//sede.YSBprintWJ(&eventWJ);
 				// Serialize the event into the single outMessage
-				sede.YSBserializeWJ(&eventWJ, outMessage);
+                for (int i = 0; i < queries; i++){
+				    sede.YSBserializeSliceM(&eventSlice, outMessage[i]);
+                    /*cout << "WINJOINYSBM->Serialized Event for Query: " << i << " WID: " << WID 
+           << " Message Size After Serialization: " << outMessage[i]->size << endl;*/
+                    // Debugging print for serialization
+                    /*cout << "WINJOINYSBM->Serialized Event for Query: " << i << " WID: " << WID << " c_id: " << c_id 
+                           << " ClickCount: " << clickCount << " ViewCount: " << viewCount << " Ratio: " << ratio << endl;*/
+                }
 			}
 
 			// After all events are serialized into outMessage, send the message
 			int n = 0;
-			for (vector<Vertex *>::iterator v = next.begin(); v != next.end(); ++v)
-			{
-				if (outMessage->size > 0)
-				{
-					int idx = n * worldSize + 0; // Send to rank 0 only
-					pthread_mutex_lock(&senderMutexes[idx]);
-					outMessages[idx].push_back(outMessage);
-					pthread_cond_signal(&senderCondVars[idx]);
-					pthread_mutex_unlock(&senderMutexes[idx]);
-				}
-				else
-				{
-					delete outMessage;
-				}
-				n++;
-				break; // Only one successor node allowed
-			}
+            int idx;
+            cout << "WINJOINYSBM->Next vector size: " << next.size() << endl;  // Print size of 'next'
 
+			for (vector<Vertex *>::iterator v = next.begin(); v != next.end(); ++v)
+            {
+                for (int i = 0; i < queries; i++)
+                {
+                    if (outMessage[i] && outMessage[i]->size > 0)
+                    {
+                        idx = i; // always keep workload on same rank
+                        pthread_mutex_lock(&senderMutexes[idx]);
+                        outMessages[idx].push_back(outMessage[i]);
+                        pthread_cond_signal(&senderCondVars[idx]);
+                        pthread_mutex_unlock(&senderMutexes[idx]);
+                        // Debugging print for sending
+                        cout << "WINJOINYSBM->Sent Message for Query: " << i << " WID: " << WID << " Message Size: " << outMessage[i]->size << endl;
+                    }
+                    else{
+                        cout << "WINJOINYSBM->OutMessage for Query: " << i << " is either null or has zero size!" << endl;
+                    }
+                }
+                n++;
+            }
 			// Clean up the window data after processing
 			WIDtoCIDtoCounts.erase(WID);
-			D(cout << "WINJOINYSBM->WID: " << WID << " IS COMPLETED AND REMOVED" << endl;);
+			cout << "WINJOINYSBM->WID: " << WID << " IS COMPLETED AND REMOVED" << endl;
 		}
 
 		pthread_mutex_unlock(&WIDtoCIDtoCounts_mutex); // Unlock after completed windows are processed

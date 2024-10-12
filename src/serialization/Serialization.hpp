@@ -109,6 +109,16 @@ typedef struct EventWJ
 	long int latency;
 } EventWJ;
 
+typedef struct EventSliceM
+{
+	long int slice_id;
+	long int c_id;
+	long int ClickCount;
+	long int ViewCount;
+	double ratio;
+	long int latency;
+} EventSliceM;
+
 class Serialization
 {
 
@@ -193,6 +203,12 @@ public:
 	void YSBdeserializeWJ(Message *message, EventWJ *event, int offset);
 
 	void YSBprintWJ(EventWJ *event);
+
+	void YSBserializeSliceM(EventSliceM *event, Message *message);
+
+	void YSBdeserializeSliceM(Message *message, EventSliceM *event, int offset);
+
+	void YSBprintSliceM(EventSliceM *event);
 };
 
 #endif /* SERIALIZATION_SERIALIZATION_HPP_ */

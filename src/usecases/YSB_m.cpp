@@ -55,7 +55,7 @@ YSB_m::YSB_m(unsigned long throughput) : Dataflow()
 	full_aggregateClick = new FullAggregatorM(7, rank, worldSize, 1); // last argument denotes event_type click=1 and view=2
 	full_aggregateView = new FullAggregatorM(8, rank, worldSize, 2);
 	ratioFinder = new WinJoinYSBM(9, rank, worldSize);
-	collector = new EventCollectorM(10, rank, worldSize);
+	//collector = new EventCollectorM(10, rank, worldSize);
 
 	addLink(generator, filter);
 	addLink(filter, joinClick);
@@ -66,7 +66,7 @@ YSB_m::YSB_m(unsigned long throughput) : Dataflow()
 	addLink(par_aggregateView, full_aggregateView);
 	addLink(full_aggregateView, ratioFinder);
 	addLink(full_aggregateClick, ratioFinder);
-	addLink(ratioFinder, collector);
+	//addLink(ratioFinder, collector);
 
 	generator->initialize();
 	filter->initialize();
@@ -77,7 +77,7 @@ YSB_m::YSB_m(unsigned long throughput) : Dataflow()
 	full_aggregateClick->initialize();
 	full_aggregateView->initialize();
 	ratioFinder->initialize();
-	collector->initialize();
+	//collector->initialize();
 }
 
 YSB_m::~YSB_m()
@@ -90,5 +90,5 @@ YSB_m::~YSB_m()
 	delete full_aggregateClick;
 	delete full_aggregateView;
 	delete ratioFinder;
-	delete collector;
+	//delete collector;
 }
