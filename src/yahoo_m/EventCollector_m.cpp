@@ -104,12 +104,12 @@ void EventCollectorM::streamProcess(int channel)
                 inMessage = tmpMessages->front();
                 tmpMessages->pop_front();
 
-                cout << "EVENTCOLLECTOR->POP MESSAGE: TAG [" << tag << "] @ "
-                     << rank << " CHANNEL " << channel << " BUFFER "
-                     << inMessage->size << endl;
+                // cout << "EVENTCOLLECTOR->POP MESSAGE: TAG [" << tag << "] @ "
+                //      << rank << " CHANNEL " << channel << " BUFFER "
+                //      << inMessage->size << endl;
 
                 int event_count = inMessage->size / sizeof(EventWJ);
-                cout << "EVENT_COUNT: " << event_count << endl;
+                // cout << "EVENT_COUNT: " << event_count << endl;
 
                 int i = 0, count = 0;
                 while (i < event_count)
@@ -128,17 +128,18 @@ void EventCollectorM::streamProcess(int channel)
                             << endl;
 
                     )
-                    cout << "WID: " << eventWJ.WID << "\tc_id: " << eventWJ.c_id << "\tClick count: " << eventWJ.ClickCount << "\tView count: " << eventWJ.ViewCount << "\tmax_event_time: " << eventWJ.latency << endl;
+                    // cout << "WID: " << eventWJ.WID << "\tc_id: " << eventWJ.c_id << "\tClick count: " << eventWJ.ClickCount << "\tView count: " << eventWJ.ViewCount << "\tmax_event_time: " << eventWJ.latency << endl;
 
                     i++;
                 }
                 sum_counts += event_count; // count of distinct c_id's processed
                 num_messages++;
 
-                cout << "\n  #" << num_messages << "\tCOUNT: " << count
-                     << "\tAVG_LATENCY: " << ((double)sum_latency / sum_counts) / 1000.0 << "\tGlobal Sum Counts: " << sum_counts
-                     << "\tGlobal Sum Latency: " << sum_latency << "\tN=" << event_count << "\n"
-                     << endl;
+                // cout << "\n  #" << num_messages << "\tCOUNT: " << count
+                //      << "\tAVG_LATENCY: " << ((double)sum_latency / sum_counts) / 1000.0 << "\tGlobal Sum Counts: " << sum_counts
+                //      << "\tGlobal Sum Latency: " << sum_latency << "\tN=" << event_count << "\n"
+                //      << endl;
+                cout << num_messages << "\t" << ((double)sum_latency / sum_counts) / 1000.0 << endl;
 
                 delete inMessage; // delete message from incoming queue
                 c++;

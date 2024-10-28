@@ -32,7 +32,8 @@
  */
 
 #include "PartialAggregator.hpp"
-
+#include <cstdlib> // For rand()
+#include <ctime>   // For time()
 #include <iostream>
 #include <vector>
 #include <cstring>
@@ -41,7 +42,7 @@
 #include <string>
 #include <sstream>
 #include <unordered_map>
-
+#include <unistd.h>
 #include "../communication/Message.hpp"
 #include "../function/Function.hpp"
 #include "../serialization/Serialization.hpp"
@@ -69,6 +70,7 @@ void PartialAggregator::streamProcess(int channel)
 
 	D(cout << "PARTIALAGGREGATOR->STREAMPROCESS [" << tag << "] @ " << rank
 		   << " IN-CHANNEL " << channel << endl;);
+	srand(time(NULL));
 
 	Message *inMessage;
 	Message **outMessagesToWindowIDs = new Message *[worldSize];
@@ -218,6 +220,10 @@ void PartialAggregator::streamProcess(int channel)
 				WIDtoIHM_it->second.clear();
 			}
 			WIDtoIHM.clear();
+			// Introduce random delay for out-of-order events
+			int delay_ms = rand() % 1000; // Random delay between 0 to 1000 ms
+			// cout << "Rank =" << rank << " is sleeping for " << delay_ms << " ms\n";
+			usleep(delay_ms * 1000); // Convert milliseconds to microseconds
 
 			int n = 0;
 			for (vector<Vertex *>::iterator v = next.begin(); v != next.end();

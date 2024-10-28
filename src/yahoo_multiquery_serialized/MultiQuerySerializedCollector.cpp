@@ -112,7 +112,7 @@ void MultiQuerySerializedCollector::streamProcess(int channel)
                 int event_count = inMessage->size / sizeof(EventPC);
 
                 int i = 0;
-                std::cout << "*********************************************QUERY " << rank + 1 << "*********************************************" << endl;
+                // std::cout << "*********************************************QUERY " << rank + 1 << "*********************************************" << endl;
 
                 while (i < event_count)
                 {
@@ -131,7 +131,7 @@ void MultiQuerySerializedCollector::streamProcess(int channel)
                 {
                     min_window_id = eventPC.WID;
                     is_min_window_id_initialized = true;
-                    cout << "Min Window ID = " << min_window_id << endl;
+                    // cout << "Min Window ID = " << min_window_id << endl;
                 }
                 delete inMessage; // delete message from incoming queue
                 c++;
@@ -149,11 +149,13 @@ void MultiQuerySerializedCollector::streamProcess(int channel)
                         EventPC eventPC = widCidToEventPC[key];
                         sum_latency += (time_now - eventPC.latency);
                         total_count += eventPC.count;
-                        std::cout << "WID: " << eventPC.WID << "\tQuery " << rank + 1 << "\t" << "\tc_id: " << eventPC.c_id << "\tcount: " << eventPC.count << "\tmax_event_time: " << eventPC.latency << endl;
+                        // std::cout << "WID: " << eventPC.WID << "\tQuery " << rank + 1 << "\t" << "\tc_id: " << eventPC.c_id << "\tcount: " << eventPC.count << "\tmax_event_time: " << eventPC.latency << endl;
                         widCidToEventPC.erase(key);
                     }
-                    cout << "\n  #" << num_messages << "\tQuery " << (rank + 1) << "\tCOUNT: " << total_count
-                         << "\tAVG_LATENCY: " << ((double)sum_latency / sum_counts) / 1000.0 << "\tGlobal Sum Counts: " << sum_counts << "\tGlobal Sum Latency: " << sum_latency << "\tN=" << widToSumCount[eventPC.WID] << "\n";
+                    // cout << "\n  #" << num_messages << "\tQuery " << (rank + 1) << "\tCOUNT: " << total_count
+                    //      << "\tAVG_LATENCY: " << ((double)sum_latency / sum_counts) / 1000.0 << "\tGlobal Sum Counts: " << sum_counts << "\tGlobal Sum Latency: " << sum_latency << "\tN=" << widToSumCount[eventPC.WID] << "\n";
+                    cout << num_messages << "\t" << ((double)sum_latency / sum_counts) / 1000.0 << "\t" << (rank + 1) << endl;
+
                     widToCids.erase(min_window_id);
                     min_window_id++;
                 }

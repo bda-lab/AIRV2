@@ -67,6 +67,7 @@ void WinJoinYSBM::batchProcess()
 void WinJoinYSBM::streamProcess(int channel)
 {
 	D(cout << "WINJOINYSBM->STREAMPROCESS [" << tag << "] @ " << rank << " IN-CHANNEL " << channel << endl;);
+	srand(time(NULL));
 
 	Message *inMessage, *outMessage;
 	list<Message *> *tmpMessages = new list<Message *>();
@@ -249,6 +250,14 @@ void WinJoinYSBM::streamProcess(int channel)
 				// Serialize the event into the single outMessage
 				sede.YSBserializeWJ(&eventWJ, outMessage);
 			}
+			// if (rank == 0)
+			// {
+			// 	// cout<<"Rank 0 is sleeping for 2 seconds\n";
+			// 	sleep(1);
+			// }
+			int delay_ms = rand() % 1000; // Random delay between 0 to 1000 ms
+			// cout << "Rank =" << rank << " is sleeping for " << delay_ms << " ms\n";
+			usleep(delay_ms * 1000); // Convert milliseconds to microseconds
 
 			// After all events are serialized into outMessage, send the message
 			int n = 0;

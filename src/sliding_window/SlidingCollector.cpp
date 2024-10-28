@@ -128,16 +128,18 @@ void SlidingCollector::streamProcess(int channel)
                             << endl;
 
                     )
-                    cout << "WID: " << eventPC.WID << "\tc_id: " << eventPC.c_id << "\tcount: " << eventPC.count << "\tmax_event_time: " << eventPC.latency << endl;
+                    // cout << "WID: " << eventPC.WID << "\tc_id: " << eventPC.c_id << "\tcount: " << eventPC.count << "\tmax_event_time: " << eventPC.latency << endl;
 
                     i++;
                 }
                 sum_counts += event_count; // count of distinct c_id's processed
                 num_messages++;
 
-                cout << "\n  #" << num_messages << " COUNT: " << count
-                     << "\tAVG_LATENCY: " << ((double)sum_latency / sum_counts) / 1000.0 << "\tGlobal Sum Counts: " << sum_counts << "\tGlobal Sum Latency: " << sum_latency << "\tN=" << event_count << "\n"
-                     << endl;
+                // cout << "\n  #" << num_messages << " COUNT: " << count
+                //      << "\tAVG_LATENCY: " << ((double)sum_latency / sum_counts) / 1000.0 << "\tGlobal Sum Counts: " << sum_counts << "\tGlobal Sum Latency: " << sum_latency << "\tN=" << event_count << "\n"
+                //      << endl;
+
+                cout << num_messages << "\t" << ((double)sum_latency / sum_counts) / 1000.0 << endl;
 
                 delete inMessage; // delete message from incoming queue
                 c++;

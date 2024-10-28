@@ -129,7 +129,7 @@ void SerializedCollectorM::streamProcess(int channel)
                 {
                     min_window_id = eventWJ.WID;
                     is_min_window_id_initialized = true;
-                    cout << "Min Window ID = " << min_window_id << endl;
+                    // cout << "Min Window ID = " << min_window_id << endl;
                 }
                 delete inMessage; // delete message from incoming queue
                 c++;
@@ -147,11 +147,13 @@ void SerializedCollectorM::streamProcess(int channel)
                         EventWJ eventWJ = widCidToEventWJ[key];
                         sum_latency += (time_now - eventWJ.latency);
                         total_count += eventWJ.ClickCount + eventWJ.ViewCount;
-                        cout << "WID: " << eventWJ.WID << "\tc_id: " << eventWJ.c_id << "\tClick count: " << eventWJ.ClickCount << "\tView count: " << eventWJ.ViewCount << "\tmax_event_time: " << eventWJ.latency << endl;
+                        // cout << "WID: " << eventWJ.WID << "\tc_id: " << eventWJ.c_id << "\tClick count: " << eventWJ.ClickCount << "\tView count: " << eventWJ.ViewCount << "\tmax_event_time: " << eventWJ.latency << endl;
                         widCidToEventWJ.erase(key);
                     }
-                    cout << "\n  #" << num_messages << " COUNT: " << total_count
-                         << "\tAVG_LATENCY: " << ((double)sum_latency / sum_counts) / 1000.0 << "\tGlobal Sum Counts: " << sum_counts << "\tGlobal Sum Latency: " << sum_latency << "\tN=" << widToSumCount[eventWJ.WID] << "\n";
+                    // cout << "\n  #" << num_messages << " COUNT: " << total_count
+                    //      << "\tAVG_LATENCY: " << ((double)sum_latency / sum_counts) / 1000.0 << "\tGlobal Sum Counts: " << sum_counts << "\tGlobal Sum Latency: " << sum_latency << "\tN=" << widToSumCount[eventWJ.WID] << "\n";
+                    cout << num_messages << "\t" << ((double)sum_latency / sum_counts) / 1000.0 << endl;
+
                     widToCids.erase(min_window_id);
                     min_window_id++;
                 }

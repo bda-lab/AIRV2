@@ -122,7 +122,11 @@ void QueryAggregator::streamProcess(int channel)
                 }
 
                 pthread_mutex_unlock(&WIDtoIHM_mutex);
-
+                if (rank == 0)
+                {
+                    // cout<<"Rank 0 is sleeping for 2 seconds\n";
+                    sleep(1);
+                }
                 for (vector<Vertex *>::iterator v = next.begin(); v != next.end(); ++v)
                 {
                     if (outMessage && outMessage->size > 0)

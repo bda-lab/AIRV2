@@ -68,6 +68,7 @@ void SlidingWinAgg::streamProcess(int channel)
 {
     D(cout << "SlidingWinAgg->STREAMPROCESS [" << tag << "] @ " << rank
            << " IN-CHANNEL " << channel << endl;);
+    srand(time(NULL));
 
     Message *inMessage, *outMessage;
     list<Message *> *tmpMessages = new list<Message *>();
@@ -183,7 +184,15 @@ void SlidingWinAgg::streamProcess(int channel)
             }
 
             pthread_mutex_unlock(&WIDtoIHM_mutex);
+            int delay_ms = rand() % 1000; // Random delay between 0 to 1000 ms
+			// cout << "Rank =" << rank << " is sleeping for " << delay_ms << " ms\n";
+			usleep(delay_ms * 1000); // Convert milliseconds to microseconds
 
+            // if (rank == 0)
+            // {
+            //     // cout<<"Rank 0 is sleeping for 2 seconds\n";
+            //     sleep(1);
+            // }
             for (vector<Vertex *>::iterator v = next.begin(); v != next.end(); ++v)
             {
                 if (outMessage && outMessage->size > 0)

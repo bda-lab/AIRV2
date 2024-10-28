@@ -149,11 +149,13 @@ void Sliding_Serialized::streamProcess(int channel)
                         EventPC eventPC = widCidToEventPC[key];
                         sum_latency += (time_now - eventPC.latency);
                         total_count += eventPC.count;
-                        std::cout << "WID: " << eventPC.WID << "\tc_id: " << eventPC.c_id << "\tcount: " << eventPC.count << "\tmax_event_time: " << eventPC.latency << endl;
+                        // std::cout << "WID: " << eventPC.WID << "\tc_id: " << eventPC.c_id << "\tcount: " << eventPC.count << "\tmax_event_time: " << eventPC.latency << endl;
                         widCidToEventPC.erase(key);
                     }
-                    cout << "\n  #" << num_messages << "\tCOUNT: " << total_count
-                         << "\tAVG_LATENCY: " << ((double)sum_latency / sum_counts) / 1000.0 << "\tGlobal Sum Counts: " << sum_counts << "\tGlobal Sum Latency: " << sum_latency << "\tN=" << widToSumCount[eventPC.WID] << "\n";
+                    // cout << "\n  #" << num_messages << "\tCOUNT: " << total_count
+                    //      << "\tAVG_LATENCY: " << ((double)sum_latency / sum_counts) / 1000.0 << "\tGlobal Sum Counts: " << sum_counts << "\tGlobal Sum Latency: " << sum_latency << "\tN=" << widToSumCount[eventPC.WID] << "\n";
+                    cout << num_messages << "\t" << ((double)sum_latency / sum_counts) / 1000.0 << endl;
+
                     widToCids.erase(min_window_id);
 
                     min_window_id++;

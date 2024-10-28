@@ -110,7 +110,7 @@ void QueryCollector::streamProcess(int channel)
 			// std::cout << "EVENT_COUNT: " << event_count << endl;
 
 			int i = 0, count = 0;
-			std::cout << "*********************************************QUERY " << rank + 1 << "*********************************************" << endl;
+			// std::cout << "*********************************************QUERY " << rank + 1 << "*********************************************" << endl;
 			while (i < event_count)
 			{
 				sede.YSBdeserializePC(inMessage, &eventPC,
@@ -128,16 +128,17 @@ void QueryCollector::streamProcess(int channel)
 						<< endl;
 
 				)
-				std::cout << "WID: " << eventPC.WID << "\tQuery " << rank + 1 << "\t" << "\tc_id: " << eventPC.c_id << "\tcount: " << eventPC.count << "\tmax_event_time: " << eventPC.latency << endl;
+				// std::cout << "WID: " << eventPC.WID << "\tQuery " << rank + 1 << "\t" << "\tc_id: " << eventPC.c_id << "\tcount: " << eventPC.count << "\tmax_event_time: " << eventPC.latency << endl;
 
 				i++;
 			}
 			sum_counts += event_count; // count of distinct c_id's processed
 			num_messages++;
 
-			std::cout << "\n  #" << num_messages << "\tQuery " << (rank + 1) << "\tCOUNT: " << count
-					  << "\tAVG_LATENCY: " << ((double)sum_latency / sum_counts) / 1000.0 << "\tGlobal Sum Counts: " << sum_counts << "\tGlobal Sum Latency: " << sum_latency << "\tN=" << event_count << "\n"
-					  << endl;
+			// std::cout << "\n  #" << num_messages << "\tQuery " << (rank + 1) << "\tCOUNT: " << count
+			// 		  << "\tAVG_LATENCY: " << ((double)sum_latency / sum_counts) / 1000.0 << "\tGlobal Sum Counts: " << sum_counts << "\tGlobal Sum Latency: " << sum_latency << "\tN=" << event_count << "\n"
+			// 		  << endl;
+			cout << num_messages << "\t" << ((double)sum_latency / sum_counts) / 1000.0 << "\t" << (rank + 1) << endl;
 
 			delete inMessage; // delete message from incoming queue
 			c++;
